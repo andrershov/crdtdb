@@ -3,10 +3,16 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class DotSet {
+	@JsonProperty("dotSet")
 	private Set<Dot> dotSet;
 	
-	public DotSet(Set<Dot> dotSet){
+	@JsonCreator
+	public DotSet(@JsonProperty("dotSet") Set<Dot> dotSet){
 		this.dotSet = dotSet;
 	}
 	
@@ -23,11 +29,9 @@ public class DotSet {
 		this();
 		dotSet.add(dot);
 	}
-	
 	private Set<Dot> intersect(DotSet that){
 		return dotSet.stream().filter(dot->that.dotSet.contains(dot)).collect(Collectors.toSet());
 	}
-	
 	public void addDot(Dot dot){
 		this.dotSet.add(dot);
 	}
@@ -44,17 +48,16 @@ public class DotSet {
 		});
 		return newSet;
 	}
-	
 	public boolean join(DotSet that, CausalContext thisContext, CausalContext thatContext){
-		if (thisContext.contains(thatContext)) return false; //TODO we need to check DotSet as well
-
 		Set<Dot> newDotset = this.intersect(that);
 		newDotset.addAll(this.minus(thatContext));
 		newDotset.addAll(that.minus(thisContext));
+		if (this.dotSet.equals(newDotset)) return false;
 		this.dotSet = newDotset;
 		return true;
 	}
 
+	@JsonIgnore
 	public boolean isEmpty() {
 		return dotSet.isEmpty();
 	}

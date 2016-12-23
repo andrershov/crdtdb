@@ -31,12 +31,12 @@ public class DotMap<V> {
 	
 	private static class IntersectResult<V> {
 		boolean thisContainsThat = true;
-		Map<Dot, V> newMap = new HashMap<>();
+		
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private IntersectResult<V> intersect(DotMap<V> that){
-		IntersectResult<V> res = new IntersectResult<>();
+	private Map<Dot, V> intersect(DotMap<V> that){
+		Map<Dot, V> newMap = new HashMap<>();
 		dotMap.forEach((dot, thisValue) -> {
 			V thatValue = that.dotMap.get(dot);
 			if (thatValue != null) {
@@ -47,15 +47,14 @@ public class DotMap<V> {
 				if (((Comparable)thisValue).compareTo(thatValue) >=0){
 					value = thisValue;
 				} else {
-					res.thisContainsThat = false;
 					value = thatValue;
 				}
 				
-				res.newMap.put(dot, value);
+				newMap.put(dot, value);
 			}
 		});
 		
-		return res;
+		return newMap;
 	}
 	
 	
@@ -77,11 +76,10 @@ public class DotMap<V> {
 	}
 	
 	public boolean join(DotMap<V> that, CausalContext thisContext, CausalContext thatContext){
-		IntersectResult<V> intersectResult = this.intersect(that);
-		if (intersectResult.thisContainsThat && thisContext.contains(thatContext)) return false;
-		Map<Dot, V> newMap = intersectResult.newMap;
+		Map<Dot, V> newMap = this.intersect(that);
 		newMap.putAll(this.minus(thatContext));
 		newMap.putAll(that.minus(thisContext));
+		if (this.dotMap.equals(newMap)) return false;
 		this.dotMap = newMap;
 		return true;
 	}

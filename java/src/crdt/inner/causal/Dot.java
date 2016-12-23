@@ -1,9 +1,11 @@
 package crdt.inner.causal;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Dot {
-	public Dot(String nodeId, int counter) {
+	@JsonCreator
+	public Dot(@JsonProperty("nodeId") String nodeId, @JsonProperty("counter") int counter) {
 		this.nodeId = nodeId;
 		this.counter = counter;
 	}

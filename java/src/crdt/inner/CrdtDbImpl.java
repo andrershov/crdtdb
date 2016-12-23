@@ -1,5 +1,6 @@
 package crdt.inner;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -17,6 +18,14 @@ public class CrdtDbImpl implements CrdtDb {
 	public CrdtDbImpl(List<? extends NodeConnection> nodes){
 		deltaExchanger = new DeltaExchanger(this, deltaStorage, nodes);
 	}
+	public CrdtDbImpl(){
+		this(Collections.emptyList());
+	}
+	
+	public CrdtDbImpl(NodeConnection node){
+		this(Collections.singletonList(node));
+	}
+	
 
 	public ModelImpl load(String nodeId, String key) {
 		ModelImpl model = map.get(key);

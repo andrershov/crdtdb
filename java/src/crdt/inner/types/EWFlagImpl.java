@@ -1,5 +1,9 @@
 package crdt.inner.types;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import crdt.api.CRDT;
 import crdt.api.types.EWFlag;
 import crdt.inner.causal.CausalContext;
@@ -7,8 +11,11 @@ import crdt.inner.causal.Dot;
 import crdt.inner.causal.DotSet;
 
 public class EWFlagImpl implements EWFlag  {
+	@JsonIgnore
 	private EWFlagImpl delta;
+	@JsonProperty("dotSet")
 	protected DotSet dotSet;
+	@JsonIgnore
 	protected CausalContext cc;
 	
 	
@@ -20,6 +27,12 @@ public class EWFlagImpl implements EWFlag  {
 	public EWFlagImpl(CausalContext cc){
 		this(cc, new DotSet());
 	}
+	
+	@JsonCreator
+	public EWFlagImpl(@JsonProperty("dotSet") DotSet dotSet){
+		this.dotSet = dotSet;
+	}
+	
 	
 	private EWFlagImpl createAndMergeDelta(DotSet newDotset, CausalContext newCC) {
 		EWFlagImpl currentDelta =  new EWFlagImpl(newCC, newDotset);
@@ -77,6 +90,7 @@ public class EWFlagImpl implements EWFlag  {
 	}
 
 	@Override
+	@JsonIgnore
 	public EWFlagImpl getDelta() {
 		return delta;
 	}

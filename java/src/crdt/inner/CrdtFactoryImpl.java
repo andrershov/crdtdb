@@ -24,4 +24,5 @@ public class CrdtFactoryImpl implements CrdtFactory {
 	public DWFlagImpl createDWFlag() {
 		return new DWFlagImpl(cc);
 	}
+
 }

@@ -3,17 +3,87 @@ import java.util.Arrays;
 
 import crdt.api.*;
 import crdt.api.types.DWFlag;
+import crdt.api.types.EWFlag;
 import crdt.api.types.MVRegister;
 import crdt.inner.CrdtDbImpl;
 import crdt.inner.DeltaStorage;
 import crdt.inner.conn.LocalNodeJsonConnections;
+import crdt.inner.types.EWFlagImpl;
+import crdt.inner.types.ItemCRDT;
+import crdt.inner.types.ItemsCRDT;
+import crdt.inner.types.MVRegisterImpl;
 
 public class Main {
 	public static void main(String[] args) throws IOException, InterruptedException {
 		// testFlags();
 		// testMVReg();
 
-		testReplication();
+		//testReplication();
+		
+		testItems();
+	}
+	
+	private static ItemCRDT createItem(Model model, String str, boolean enabled){
+		ItemCRDT item = new ItemCRDT();
+		MVRegister<String> text = model.factory().createMVRegister();
+		text.write(str);
+		item.text = (MVRegisterImpl<String>) text;
+		
+		EWFlag done = model.factory().createEWFlag();
+		if (enabled) {
+			done.enable();
+		} else {
+			done.disable();
+		}
+		item.done = (EWFlagImpl) done;
+		return item;
+	}
+	
+
+	private static void testItems() throws InterruptedException {
+		LocalNodeJsonConnections conn12 = new LocalNodeJsonConnections("node1", "node2");
+		CrdtDbImpl db1 = new CrdtDbImpl(conn12.getConn1());
+		CrdtDbImpl db2 = new CrdtDbImpl(conn12.getConn2());
+		
+		conn12.breakConn();
+		
+		Model modelA = db1.load("node1", "reg");
+		ItemCRDT item1 = createItem(modelA, "item1_1", true);
+		ItemCRDT item2 = createItem(modelA, "item2_1", false);
+		ItemsCRDT items = new ItemsCRDT();
+		items.item1 = item1;
+		items.item2 = item2;
+		modelA.setRoot(items);
+		db1.store("reg", modelA);
+		
+		Model modelB= db2.load("node2", "reg");
+		ItemCRDT item1B = createItem(modelB, "item1_2", false);
+		ItemCRDT item2B = createItem(modelB, "item2_2", true);
+		ItemsCRDT itemsB = new ItemsCRDT();
+		itemsB.item1 = item1B;
+		itemsB.item2 = item2B;
+		modelB.setRoot(itemsB);
+		db2.store("reg", modelB);
+		
+		conn12.fixConn();
+		
+		Thread.sleep(1000L);
+		
+		modelA = db1.load("node1", "reg");
+		items = (ItemsCRDT) modelA.getRoot();
+		items.item1.done.disable();
+		System.out.println(items);
+		
+		db1.store("reg", modelA);
+		
+		
+		
+		Thread.sleep(100L);
+		modelB = db2.load("node2", "reg");
+		itemsB = (ItemsCRDT) modelB.getRoot();
+		
+		System.out.println(itemsB);
+		
 	}
 
 	private static void testReplication() throws InterruptedException {
@@ -74,7 +144,7 @@ public class Main {
 
 	@SuppressWarnings("unchecked")
 	private static void testMVReg() throws IOException {
-		CrdtDb db = new CrdtDbImpl(null);
+		CrdtDb db = new CrdtDbImpl();
 		Model modelA = db.load("nodeA", "reg");
 
 		MVRegister<String> regA = (MVRegister<String>) modelA.getRoot();
@@ -117,7 +187,7 @@ public class Main {
 	}
 
 	public static void testFlags() {
-		CrdtDb db = new CrdtDbImpl(null);
+		CrdtDb db = new CrdtDbImpl();
 		Model modelA = db.load("nodeA", "flag");
 
 		DWFlag flagA = (DWFlag) modelA.getRoot();

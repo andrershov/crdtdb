@@ -89,12 +89,12 @@ public class MVRegisterImpl<V> implements MVRegister<V>  {
 	}
 
 	@Override
-	public CRDT clone(CausalContext cc) {
+	public MVRegisterImpl<V> clone(CausalContext cc) {
 		return new MVRegisterImpl<V>(cc, new DotMap<>(dotMap));
 	}
 
 	@Override
-	public CRDT getDelta() {
+	public MVRegisterImpl<V> getDelta() {
 		return delta;
 	}
 	
