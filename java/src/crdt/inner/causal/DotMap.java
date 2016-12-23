@@ -29,28 +29,14 @@ public class DotMap<V> {
 		dotMap.put(dot, value);
 	}
 	
-	private static class IntersectResult<V> {
-		boolean thisContainsThat = true;
-		
-	}
 	
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private Map<Dot, V> intersect(DotMap<V> that){
+	private Map<Dot, V> intersect(DotMap<V> that, JoinFunction<V> joinFn){
 		Map<Dot, V> newMap = new HashMap<>();
 		dotMap.forEach((dot, thisValue) -> {
 			V thatValue = that.dotMap.get(dot);
 			if (thatValue != null) {
-				if (!(thisValue instanceof Comparable)) throw new RuntimeException("If both DotMaps contain same dot, V should implement Comparable interface");
-				if (!(thatValue instanceof Comparable)) throw new RuntimeException("If both DotMaps contain same dot, V should implement Comparable interface");
-				
-				V value = null;
-				if (((Comparable)thisValue).compareTo(thatValue) >=0){
-					value = thisValue;
-				} else {
-					value = thatValue;
-				}
-				
-				newMap.put(dot, value);
+				V newValue = joinFn.apply(thisValue, thatValue);
+				newMap.put(dot, newValue);
 			}
 		});
 		
@@ -75,8 +61,8 @@ public class DotMap<V> {
 		this.dotMap.put(dot, value);
 	}
 	
-	public boolean join(DotMap<V> that, CausalContext thisContext, CausalContext thatContext){
-		Map<Dot, V> newMap = this.intersect(that);
+	public boolean join(DotMap<V> that, CausalContext thisContext, CausalContext thatContext, JoinFunction<V> joinFn){
+		Map<Dot, V> newMap = this.intersect(that, joinFn);
 		newMap.putAll(this.minus(thatContext));
 		newMap.putAll(that.minus(thisContext));
 		if (this.dotMap.equals(newMap)) return false;
@@ -98,5 +84,9 @@ public class DotMap<V> {
 	@Override
 	public String toString() {
 		return "DotMap [dotMap=" + dotMap + "]";
+	}
+
+	public V get(Dot dot) {
+		return dotMap.get(dot);
 	}
 }

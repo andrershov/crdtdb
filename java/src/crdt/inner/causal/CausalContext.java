@@ -99,6 +99,14 @@ public class CausalContext {
 		}
 		return true;
 	}
+
+	
+	public Dot current() {
+		Integer counter = causalContext.get(nodeId);
+		if (counter == null)
+			counter = 0;
+		return new Dot(nodeId, counter);
+	}
 	
 	
 }

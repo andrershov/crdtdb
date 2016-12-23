@@ -5,6 +5,7 @@ import crdt.api.*;
 import crdt.api.types.DWFlag;
 import crdt.api.types.EWFlag;
 import crdt.api.types.MVRegister;
+import crdt.api.types.PNCounter;
 import crdt.inner.CrdtDbImpl;
 import crdt.inner.DeltaStorage;
 import crdt.inner.conn.LocalNodeJsonConnections;
@@ -20,9 +21,42 @@ public class Main {
 
 		//testReplication();
 		
-		testItems();
+		//testItems();
+		
+		testCounter();
 	}
 	
+	private static void testCounter() throws InterruptedException {
+		LocalNodeJsonConnections conn12 = new LocalNodeJsonConnections("node1", "node2");
+		CrdtDbImpl db1 = new CrdtDbImpl(conn12.getConn1());
+		CrdtDbImpl db2 = new CrdtDbImpl(conn12.getConn2());
+		
+		conn12.breakConn();
+		
+		Model modelA = db1.load("node1", "reg");
+		PNCounter counter = modelA.factory().createPNCounter();
+		counter.increment(10);
+		counter.decrement(5);
+		System.out.println(counter.value());
+		modelA.setRoot(counter);
+		db1.store("reg", modelA);
+		
+		Model modelB = db2.load("node2", "reg");
+		PNCounter counterB = modelB.factory().createPNCounter();
+		counterB.increment(20);
+		counterB.decrement(15);
+		System.out.println(counter.value());
+		modelB.setRoot(counterB);
+		db2.store("reg", modelB);
+		
+		conn12.fixConn();
+		
+		Thread.sleep(100);
+		modelB = db1.load("node2", "reg");
+		counterB = (PNCounter) modelB.getRoot();
+		System.out.println(counterB.value());
+	}
+
 	private static ItemCRDT createItem(Model model, String str, boolean enabled){
 		ItemCRDT item = new ItemCRDT();
 		MVRegister<String> text = model.factory().createMVRegister();

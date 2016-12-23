@@ -10,6 +10,7 @@ import crdt.inner.types.EWFlagImpl;
 import crdt.inner.types.ItemCRDT;
 import crdt.inner.types.ItemsCRDT;
 import crdt.inner.types.MVRegisterImpl;
+import crdt.inner.types.PNCounterImpl;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({ 
@@ -17,7 +18,8 @@ import crdt.inner.types.MVRegisterImpl;
 	@Type(value = EWFlagImpl.class, name = "EWFlag"),
 	@Type(value = DWFlagImpl.class, name = "DWFlag"),
 	@Type(value = ItemCRDT.class, name = "ItemCRDT"),
-	@Type(value = ItemsCRDT.class, name = "ItemsCRDT") 
+	@Type(value = ItemsCRDT.class, name = "ItemsCRDT"),
+	@Type(value = PNCounterImpl.class, name = "PNCounterImpl")
 })
 public interface CRDT {
 	public boolean join(CRDT that);

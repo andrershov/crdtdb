@@ -10,6 +10,7 @@ import crdt.api.types.MVRegister;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.causal.Dot;
 import crdt.inner.causal.DotMap;
+import crdt.inner.causal.JoinFunction;
 
 public class MVRegisterImpl<V> implements MVRegister<V>  {
 	@JsonProperty
@@ -45,7 +46,7 @@ public class MVRegisterImpl<V> implements MVRegister<V>  {
 	}
 	
 	private MVRegisterImpl<V> writeDelta(V value){
-		Dot dot = cc.next();
+		Dot dot = cc.current();
 		DotMap<V> newDotMap = new DotMap<>(dot, value);
 		return createAndMergeDelta(newDotMap, cc.addDot(dot));
 	}
@@ -81,7 +82,12 @@ public class MVRegisterImpl<V> implements MVRegister<V>  {
 		@SuppressWarnings("unchecked")
 		MVRegisterImpl<V> thatReg = (MVRegisterImpl<V>)that;
 	
-		if (dotMap.join(thatReg.dotMap, cc, thatReg.cc)){
+		JoinFunction<V> joinFn = (val1, val2) -> {
+			if (!val1.equals(val2)) throw new RuntimeException("Values for same dot are not equal in DotMap for MVRegister");
+			return val1;
+		};
+		
+		if (dotMap.join(thatReg.dotMap, cc, thatReg.cc, joinFn)){
 			cc.join(thatReg.cc);
 			return true;
 		}
