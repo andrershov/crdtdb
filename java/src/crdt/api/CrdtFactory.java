@@ -1,5 +1,6 @@
 package crdt.api;
 
+import crdt.api.types.AWSet;
 import crdt.api.types.PNCounter;
 import crdt.inner.types.DWFlagImpl;
 import crdt.inner.types.EWFlagImpl;
@@ -13,4 +14,6 @@ public interface CrdtFactory {
 	public DWFlagImpl createDWFlag();
 
 	public PNCounter createPNCounter();
+
+	public AWSet<String> createAWSet();
 }

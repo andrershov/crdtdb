@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import crdt.inner.causal.CausalContext;
+import crdt.inner.types.AWSetImpl;
 import crdt.inner.types.DWFlagImpl;
 import crdt.inner.types.EWFlagImpl;
 import crdt.inner.types.ItemCRDT;
@@ -19,7 +20,8 @@ import crdt.inner.types.PNCounterImpl;
 	@Type(value = DWFlagImpl.class, name = "DWFlag"),
 	@Type(value = ItemCRDT.class, name = "ItemCRDT"),
 	@Type(value = ItemsCRDT.class, name = "ItemsCRDT"),
-	@Type(value = PNCounterImpl.class, name = "PNCounterImpl")
+	@Type(value = PNCounterImpl.class, name = "PNCounterImpl"),
+	@Type(value = AWSetImpl.class, name = "AWSetImpl")
 })
 public interface CRDT {
 	public boolean join(CRDT that);

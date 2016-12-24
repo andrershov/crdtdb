@@ -86,7 +86,7 @@ public class EWFlagImpl implements EWFlag  {
 
 	@Override
 	public EWFlagImpl clone(CausalContext cc) {
-		return new EWFlagImpl(cc, new DotSet(dotSet));
+		return new EWFlagImpl(cc, dotSet.copy());
 	}
 
 	@Override

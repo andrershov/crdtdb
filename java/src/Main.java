@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import crdt.api.*;
+import crdt.api.types.AWSet;
 import crdt.api.types.DWFlag;
 import crdt.api.types.EWFlag;
 import crdt.api.types.MVRegister;
@@ -23,9 +24,46 @@ public class Main {
 		
 		//testItems();
 		
-		testCounter();
+	//	testCounter();
+		testAWSet();
 	}
 	
+	private static void testAWSet() throws InterruptedException {
+		LocalNodeJsonConnections conn12 = new LocalNodeJsonConnections("node1", "node2");
+		CrdtDbImpl db1 = new CrdtDbImpl(conn12.getConn1());
+		CrdtDbImpl db2 = new CrdtDbImpl(conn12.getConn2());
+		
+		
+		Model modelA = db1.load("node1", "reg");
+		AWSet<String> set = modelA.factory().createAWSet();
+		set.add("el1_1");
+		modelA.setRoot(set);
+		db1.store("reg", modelA);
+
+		conn12.breakConn();
+		
+		Model model = db1.load("node1", "reg");
+		set = (AWSet<String>) model.getRoot();
+		System.out.println(set);
+		set.remove("el1_1");
+		set.add("el1_1");
+		db1.store("reg", model);
+		
+		conn12.fixConn();
+		
+		Model modelB = db2.load("node2", "reg");
+		AWSet<String> setB = (AWSet<String>) modelB.getRoot();
+		System.out.println(setB);
+		setB.remove("el1_1");
+		db2.store("reg", modelB);
+		
+	
+		
+		modelA = db1.load("node1", "reg");
+		set  = (AWSet<String>) modelA.getRoot();
+		System.out.println(set.elements());
+	}
+
 	private static void testCounter() throws InterruptedException {
 		LocalNodeJsonConnections conn12 = new LocalNodeJsonConnections("node1", "node2");
 		CrdtDbImpl db1 = new CrdtDbImpl(conn12.getConn1());

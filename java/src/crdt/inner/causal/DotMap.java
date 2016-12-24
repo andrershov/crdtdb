@@ -1,92 +1,93 @@
 package crdt.inner.causal;
-import java.util.Collection;
+
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import crdt.inner.serializers.DotDeserializer;
+public class DotMap<K> implements DotStore {
+	@JsonProperty("dotMap")
+	public Map<K, DotStore> dotMap;
 
-public class DotMap<V> {
-	@JsonProperty
-	@JsonDeserialize(keyUsing = DotDeserializer.class)
-	private Map<Dot, V> dotMap;
-	
-	
-	public DotMap(DotMap<V> dotMap){
+	public DotMap(K key, DotStore dotStore) {
 		this();
-		this.dotMap.putAll(dotMap.dotMap);
+		dotMap.put(key, dotStore);
 	}
-	
-	public DotMap(){
+
+	public DotMap() {
 		dotMap = new HashMap<>();
 	}
-	
-	public DotMap(Dot dot, V value){
-		this();
-		dotMap.put(dot, value);
+
+	public void put(K key, DotStore dotStore) {
+		dotMap.put(key, dotStore);
 	}
-	
-	
-	private Map<Dot, V> intersect(DotMap<V> that, JoinFunction<V> joinFn){
-		Map<Dot, V> newMap = new HashMap<>();
-		dotMap.forEach((dot, thisValue) -> {
-			V thatValue = that.dotMap.get(dot);
-			if (thatValue != null) {
-				V newValue = joinFn.apply(thisValue, thatValue);
-				newMap.put(dot, newValue);
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public boolean join(DotStore that, CausalContext thisContext, CausalContext thatContext) {
+		if (!(that instanceof DotMap))
+			throw new RuntimeException("Invalid type");
+		DotMap<K> thatDotMap = (DotMap<K>) that;
+
+		Set<K> keySet = new HashSet<>();
+		keySet.addAll(this.dotMap.keySet());
+		keySet.addAll(thatDotMap.dotMap.keySet());
+		Map<K, DotStore> newDotMap = new HashMap<>();
+
+		boolean changed = false;
+
+		for (K key : keySet) {
+			DotStore thisVal = this.dotMap.get(key);
+			DotStore thatVal = thatDotMap.dotMap.get(key);
+			if (thisVal == null) {
+				if (!thatVal.isEmpty()) {
+					newDotMap.put(key, thatVal.copy());
+					changed = true;
+				}
+			} else if (thatVal == null) {
+				if (!thisVal.isEmpty()) {
+					newDotMap.put(key, thisVal);
+				}
+			} else {
+				changed |= thisVal.join(thatVal, thisContext, thatContext);
+				if (!thisVal.isEmpty()) {
+					newDotMap.put(key, thisVal);
+				}
 			}
-		});
-		
-		return newMap;
-	}
-	
-	
-	public Map<Dot, V> minus(CausalContext cc) {
-		Map<Dot, V> newMap = new HashMap<>();
-		
-		dotMap.forEach((dot, value) ->{
-			String nodeId = dot.nodeId;
-			Integer ccCounter = cc.causalContext.get(nodeId);
-		    if (ccCounter == null || ccCounter < dot.counter){
-		    	newMap.put(dot, value);
-		    }
-		});
-		return newMap;
-	}
-	
-	public void put(Dot dot, V value){
-		this.dotMap.put(dot, value);
-	}
-	
-	public boolean join(DotMap<V> that, CausalContext thisContext, CausalContext thatContext, JoinFunction<V> joinFn){
-		Map<Dot, V> newMap = this.intersect(that, joinFn);
-		newMap.putAll(this.minus(thatContext));
-		newMap.putAll(that.minus(thisContext));
-		if (this.dotMap.equals(newMap)) return false;
-		this.dotMap = newMap;
-		return true;
-	}
-	
-	
-
-	public Collection<V> values(){
-		return dotMap.values();
+		}
+		this.dotMap = newDotMap;
+		return changed;
 	}
 
+	@Override
 	@JsonIgnore
 	public boolean isEmpty() {
 		return dotMap.isEmpty();
+	}
+
+	public Set<K> nonEmptyKeys() {
+		return dotMap.entrySet().stream().filter(entry -> !entry.getValue().isEmpty()).map(entry -> entry.getKey())
+				.collect(Collectors.toSet());
+	}
+	
+	@Override
+	public DotMap<K> copy() {
+		DotMap<K> that = new DotMap<>();
+		for (Entry<K, DotStore> entry :this.dotMap.entrySet()){
+			that.dotMap.put(entry.getKey(), entry.getValue().copy());
+		}
+		return that;
 	}
 
 	@Override
 	public String toString() {
 		return "DotMap [dotMap=" + dotMap + "]";
 	}
-
-	public V get(Dot dot) {
-		return dotMap.get(dot);
-	}
+	
+	
 }

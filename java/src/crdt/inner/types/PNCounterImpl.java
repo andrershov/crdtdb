@@ -8,10 +8,11 @@ import crdt.api.CRDT;
 import crdt.api.types.PNCounter;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.causal.Dot;
-import crdt.inner.causal.DotMap;
+import crdt.inner.causal.DotFun;
+import crdt.inner.causal.Lattice;
 
 public class PNCounterImpl implements PNCounter {
-	public static class Pair {
+	public static class Pair implements Lattice {
 		@JsonProperty("inc")
 		int inc;
 		@JsonProperty("dec")
@@ -36,13 +37,6 @@ public class PNCounterImpl implements PNCounter {
 			return p;
 		}
 		
-		public static Pair join(Pair p1, Pair p2){
-			Pair p = new Pair();
-			p.inc = Math.max(p1.inc, p2.inc);
-			p.dec = Math.max(p1.dec, p2.dec);
-			return p;
-		}
-
 		@Override
 		public int hashCode() {
 			final int prime = 31;
@@ -67,23 +61,32 @@ public class PNCounterImpl implements PNCounter {
 				return false;
 			return true;
 		}
+
+		@Override
+		public Lattice join(Lattice thatL) {
+			Pair that = (Pair)thatL;
+			Pair p = new Pair();
+			p.inc = Math.max(this.inc, that.inc);
+			p.dec = Math.max(this.dec, that.dec);
+			return p;
+		}
 	}
 	
 	@JsonProperty
-	private DotMap<Pair> dotMap;
+	private DotFun<Pair> dotMap;
 	@JsonIgnore
 	private CausalContext cc;
 	@JsonIgnore
 	private PNCounterImpl delta;
 	
 	@JsonCreator
-	public PNCounterImpl(@JsonProperty("cc") CausalContext cc, @JsonProperty("dotMap") DotMap<Pair> dotMap) {
+	public PNCounterImpl(@JsonProperty("cc") CausalContext cc, @JsonProperty("dotMap") DotFun<Pair> dotMap) {
 		this.cc = cc;
 		this.dotMap = dotMap;
 	}
 
 	public PNCounterImpl(CausalContext cc) {
-		this(cc, new DotMap<>());
+		this(cc, new DotFun<>());
 	}
 
 	private PNCounterImpl incrementDelta(int count) {
@@ -94,7 +97,7 @@ public class PNCounterImpl implements PNCounter {
 		return updateDelta(Pair.dec(count));
 	}
 	
-	private PNCounterImpl createAndMergeDelta(DotMap<Pair> newDotMap, CausalContext newCC) {
+	private PNCounterImpl createAndMergeDelta(DotFun<Pair> newDotMap, CausalContext newCC) {
 		PNCounterImpl currentDelta =  new PNCounterImpl(newCC, newDotMap);
 		if (delta != null) {
 			delta.join(currentDelta);
@@ -108,14 +111,14 @@ public class PNCounterImpl implements PNCounter {
 	private PNCounterImpl updateDelta(Pair updatePair) {
 		Dot dot = cc.current();
 		Pair p = dotMap.get(dot);
-		DotMap<Pair> newDotMap;
+		DotFun<Pair> newDotMap;
 		if (p != null) {
 			Pair newPair = p.add(updatePair);
-			newDotMap = new DotMap<>(dot, newPair);
+			newDotMap = new DotFun<>(dot, newPair);
 			return createAndMergeDelta(newDotMap, cc);
 		} else {
 			dot = cc.next();
-			newDotMap = new DotMap<Pair>(dot, updatePair);
+			newDotMap = new DotFun<Pair>(dot, updatePair);
 			return createAndMergeDelta(newDotMap, cc.addDot(dot));
 		}
 	}
@@ -130,7 +133,7 @@ public class PNCounterImpl implements PNCounter {
 		if (!(that instanceof PNCounterImpl)) throw new RuntimeException("CRDT types do not match");
 		PNCounterImpl thatCounter = (PNCounterImpl)that;
 	
-		if (dotMap.join(thatCounter.dotMap, cc, thatCounter.cc, Pair::join)){
+		if (dotMap.join(thatCounter.dotMap, cc, thatCounter.cc)){
 			cc.join(thatCounter.cc);
 			return true;
 		}
@@ -139,7 +142,7 @@ public class PNCounterImpl implements PNCounter {
 
 	@Override
 	public PNCounterImpl clone(CausalContext cc) {
-		return new PNCounterImpl(cc, new DotMap<>(dotMap));
+		return new PNCounterImpl(cc, dotMap.copy());
 	}
 
 	@Override
@@ -160,7 +163,7 @@ public class PNCounterImpl implements PNCounter {
 	}
 
 	private PNCounterImpl resetDelta() {
-		return createAndMergeDelta(new DotMap<>(), cc);
+		return createAndMergeDelta(new DotFun<>(), cc);
 	}
 
 	@Override

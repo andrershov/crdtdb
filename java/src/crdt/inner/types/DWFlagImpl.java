@@ -73,7 +73,7 @@ public class DWFlagImpl implements DWFlag  {
 
 	@Override
 	public DWFlagImpl clone(CausalContext cc) {
-		return new DWFlagImpl(cc, new DotSet(dotSet));
+		return new DWFlagImpl(cc, dotSet.copy());
 	}
 
 	@Override

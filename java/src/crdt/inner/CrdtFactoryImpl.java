@@ -1,8 +1,10 @@
 package crdt.inner;
 
 import crdt.api.CrdtFactory;
+import crdt.api.types.AWSet;
 import crdt.api.types.PNCounter;
 import crdt.inner.causal.CausalContext;
+import crdt.inner.types.AWSetImpl;
 import crdt.inner.types.DWFlagImpl;
 import crdt.inner.types.EWFlagImpl;
 import crdt.inner.types.MVRegisterImpl;
@@ -30,6 +32,11 @@ public class CrdtFactoryImpl implements CrdtFactory {
 	@Override
 	public PNCounter createPNCounter() {
 		return new PNCounterImpl(cc);
+	}
+
+	@Override
+	public AWSet<String> createAWSet() {
+		return new AWSetImpl<>(cc);
 	}
 
 }

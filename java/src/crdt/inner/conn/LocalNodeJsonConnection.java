@@ -51,15 +51,14 @@ public class LocalNodeJsonConnection implements NodeConnection {
 	}
 	
 	public void receive(String msg){
-		if (broken) return;
 		CrdtMessage crdtMsg = serializer.deserialize(msg, CrdtMessage.class);
 		if (crdtMsg instanceof AckMessage){
 			AckMessage ackMsg = (AckMessage) crdtMsg;
-			//System.out.println("Received ack msg from node "+nodeId+" msg: "+msg);
+			System.out.println("Received ack msg from node "+nodeId+" msg: "+msg);
 			deltaExchanger.onAck(this, ackMsg.counter);
 		} else if (crdtMsg instanceof DeltaMessage){
 			DeltaMessage deltaMsg = (DeltaMessage) crdtMsg;
-		//	System.out.println("Received delta msg from node "+nodeId+" msg: "+msg);
+			System.out.println("Received delta msg from node "+nodeId+" msg: "+msg);
 			deltaExchanger.onReceive(this, deltaMsg.deltaInterval, deltaMsg.counter);
 		}
 	}

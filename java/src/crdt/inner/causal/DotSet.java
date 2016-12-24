@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DotSet {
+public class DotSet implements DotStore {
 	@JsonProperty("dotSet")
 	private Set<Dot> dotSet;
 	
@@ -16,10 +16,6 @@ public class DotSet {
 		this.dotSet = dotSet;
 	}
 	
-	public DotSet(DotSet that){
-		this();
-		dotSet.addAll(that.dotSet);
-	}
 	
 	public DotSet(){
 		dotSet = new HashSet<>();
@@ -48,7 +44,8 @@ public class DotSet {
 		});
 		return newSet;
 	}
-	public boolean join(DotSet that, CausalContext thisContext, CausalContext thatContext){
+	public boolean join(DotStore thatStore, CausalContext thisContext, CausalContext thatContext){
+		DotSet that = (DotSet)thatStore;
 		Set<Dot> newDotset = this.intersect(that);
 		newDotset.addAll(this.minus(thatContext));
 		newDotset.addAll(that.minus(thisContext));
@@ -56,6 +53,14 @@ public class DotSet {
 		this.dotSet = newDotset;
 		return true;
 	}
+	
+	@Override
+	public DotSet copy() {
+		DotSet that = new DotSet();
+		that.dotSet.addAll(this.dotSet);
+		return that;
+	}
+		
 
 	@JsonIgnore
 	public boolean isEmpty() {

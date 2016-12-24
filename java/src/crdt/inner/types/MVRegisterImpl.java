@@ -9,32 +9,32 @@ import crdt.api.CRDT;
 import crdt.api.types.MVRegister;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.causal.Dot;
-import crdt.inner.causal.DotMap;
+import crdt.inner.causal.DotFun;
 import crdt.inner.causal.JoinFunction;
 
 public class MVRegisterImpl<V> implements MVRegister<V>  {
 	@JsonProperty
-	private DotMap<V> dotMap;
+	private DotFun<V> dotMap;
 	@JsonIgnore
 	private CausalContext cc;
 	@JsonIgnore
 	private MVRegisterImpl<V> delta;
 	
-	public MVRegisterImpl(CausalContext cc, DotMap<V> dotMap){
+	public MVRegisterImpl(CausalContext cc, DotFun<V> dotMap){
 		this.dotMap = dotMap;
 		this.cc = cc;
 	}
 	
 	public MVRegisterImpl(CausalContext cc){
-		this(cc, new DotMap<>());
+		this(cc, new DotFun<>());
 	}
 	
 	@JsonCreator
-	public MVRegisterImpl(@JsonProperty("dotMap") DotMap<V> dotMap) {
+	public MVRegisterImpl(@JsonProperty("dotMap") DotFun<V> dotMap) {
 		this.dotMap = dotMap;
 	}
 	
-	private MVRegisterImpl<V> createAndMergeDelta(DotMap<V> newDotMap, CausalContext newCC) {
+	private MVRegisterImpl<V> createAndMergeDelta(DotFun<V> newDotMap, CausalContext newCC) {
 		MVRegisterImpl<V> currentDelta =  new MVRegisterImpl<>(newCC, newDotMap);
 		if (delta != null) {
 			delta.join(currentDelta);
@@ -47,12 +47,12 @@ public class MVRegisterImpl<V> implements MVRegister<V>  {
 	
 	private MVRegisterImpl<V> writeDelta(V value){
 		Dot dot = cc.current();
-		DotMap<V> newDotMap = new DotMap<>(dot, value);
+		DotFun<V> newDotMap = new DotFun<>(dot, value);
 		return createAndMergeDelta(newDotMap, cc.addDot(dot));
 	}
 	
 	private MVRegisterImpl<V> clearDelta(){
-		DotMap<V> dotMap = new DotMap<>();
+		DotFun<V> dotMap = new DotFun<>();
 		return createAndMergeDelta(dotMap, cc);
 	}
 	
@@ -82,12 +82,7 @@ public class MVRegisterImpl<V> implements MVRegister<V>  {
 		@SuppressWarnings("unchecked")
 		MVRegisterImpl<V> thatReg = (MVRegisterImpl<V>)that;
 	
-		JoinFunction<V> joinFn = (val1, val2) -> {
-			if (!val1.equals(val2)) throw new RuntimeException("Values for same dot are not equal in DotMap for MVRegister");
-			return val1;
-		};
-		
-		if (dotMap.join(thatReg.dotMap, cc, thatReg.cc, joinFn)){
+		if (dotMap.join(thatReg.dotMap, cc, thatReg.cc)){
 			cc.join(thatReg.cc);
 			return true;
 		}
@@ -96,7 +91,7 @@ public class MVRegisterImpl<V> implements MVRegister<V>  {
 
 	@Override
 	public MVRegisterImpl<V> clone(CausalContext cc) {
-		return new MVRegisterImpl<V>(cc, new DotMap<>(dotMap));
+		return new MVRegisterImpl<V>(cc, dotMap.copy());
 	}
 
 	@Override
