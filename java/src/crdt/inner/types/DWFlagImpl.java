@@ -1,14 +1,21 @@
 package crdt.inner.types;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import crdt.api.CRDT;
-import crdt.api.types.DWFlag;
+import crdt.api.types.EWFlag;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.causal.Dot;
 import crdt.inner.causal.DotSet;
 
-public class DWFlagImpl implements DWFlag  {
+public class DWFlagImpl implements EWFlag  {
+	@JsonIgnore
 	private DWFlagImpl delta;
+	@JsonProperty("dotSet")
 	protected DotSet dotSet;
+	@JsonIgnore
 	protected CausalContext cc;
 	
 	
@@ -20,6 +27,12 @@ public class DWFlagImpl implements DWFlag  {
 	public DWFlagImpl(CausalContext cc){
 		this(cc, new DotSet());
 	}
+	
+	@JsonCreator
+	public DWFlagImpl(@JsonProperty("dotSet") DotSet dotSet){
+		this.dotSet = dotSet;
+	}
+	
 	
 	private DWFlagImpl createAndMergeDelta(DotSet newDotset, CausalContext newCC) {
 		DWFlagImpl currentDelta =  new DWFlagImpl(newCC, newDotset);
@@ -77,12 +90,13 @@ public class DWFlagImpl implements DWFlag  {
 	}
 
 	@Override
+	@JsonIgnore
 	public DWFlagImpl getDelta() {
 		return delta;
 	}
 
 	@Override
 	public String toString() {
-		return "DWFlag [delta=" + delta + ", dotSet=" + dotSet + ", cc=" + cc + "]";
+		return "EWFlag [delta=" + delta + ", dotSet=" + dotSet + ", cc=" + cc + "]";
 	}
 }
