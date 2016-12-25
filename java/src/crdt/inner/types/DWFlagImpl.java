@@ -5,12 +5,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import crdt.api.CRDT;
-import crdt.api.types.EWFlag;
+import crdt.api.types.DWFlag;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.causal.Dot;
 import crdt.inner.causal.DotSet;
 
-public class DWFlagImpl implements EWFlag  {
+public class DWFlagImpl implements DWFlag  {
 	@JsonIgnore
 	private DWFlagImpl delta;
 	@JsonProperty("dotSet")
@@ -97,6 +97,6 @@ public class DWFlagImpl implements EWFlag  {
 
 	@Override
 	public String toString() {
-		return "EWFlag [delta=" + delta + ", dotSet=" + dotSet + ", cc=" + cc + "]";
+		return "DWFlag [delta=" + delta + ", dotSet=" + dotSet + ", cc=" + cc + "]";
 	}
 }
