@@ -48,12 +48,15 @@ public class EWFlagImpl implements EWFlag  {
 	private EWFlagImpl enableDelta(){
 		Dot dot = cc.next();
 		DotSet newDotset = new DotSet(dot);
-		return createAndMergeDelta(newDotset, cc.addDot(dot));
+		CausalContext newCC = new CausalContext(cc, dotSet.dots());
+		newCC.addDot(dot);
+		return createAndMergeDelta(newDotset, newCC);
 	}
 	
 	private EWFlagImpl disableDelta(){
 		DotSet newDotset = new DotSet();
-		return createAndMergeDelta(newDotset, cc);
+		CausalContext newCC = new CausalContext(cc, dotSet.dots());
+		return createAndMergeDelta(newDotset, newCC);
 	}
 	
 	

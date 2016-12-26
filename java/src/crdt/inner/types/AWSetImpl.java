@@ -1,6 +1,7 @@
 package crdt.inner.types;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -21,14 +22,17 @@ public class AWSetImpl<V> implements AWSet<V> {
 	@JsonIgnore
 	private AWSetImpl<V> delta;
 	
-	public AWSetImpl(CausalContext cc) {
-		this.dotMap = new DotMap<>();
+	private AWSetImpl(CausalContext cc, DotMap<V> dotMap){
 		this.cc = cc;
+		this.dotMap = dotMap;
+	}
+	
+	public AWSetImpl(CausalContext cc) {
+		this(cc, new DotMap<>());
 	}
 	
 	@JsonCreator
-	public AWSetImpl(@JsonProperty("cc") CausalContext cc, @JsonProperty("dotMap") DotMap<V> dotMap) {
-		this.cc = cc;
+	public AWSetImpl(@JsonProperty("dotMap") DotMap<V> dotMap) {
 		this.dotMap = dotMap;
 	}
 	
@@ -76,7 +80,9 @@ public class AWSetImpl<V> implements AWSet<V> {
 	private AWSetImpl<V> addDelta(V elem) {
 		Dot dot = cc.next();
 		DotMap<V> newDotMap = new DotMap<>(elem, new DotSet(dot));
-		return createAndMergeDelta(newDotMap, cc.addDot(dot));
+		CausalContext newCC = new CausalContext(cc, dotMap.get(elem).dots());
+		newCC.addDot(dot);
+		return createAndMergeDelta(newDotMap, newCC);
 	}
 	
 	@Override
@@ -85,15 +91,15 @@ public class AWSetImpl<V> implements AWSet<V> {
 	}
 
 	private CRDT removeDelta(V elem) {
-		Dot dot = cc.next();
-		DotMap<V> newDotMap = new DotMap<>(elem, new DotSet());
-		return createAndMergeDelta(newDotMap, cc.addDot(dot));
+		DotMap<V> newDotMap = new DotMap<>();
+		CausalContext newCC = new CausalContext(cc, dotMap.get(elem).dots());
+		return createAndMergeDelta(newDotMap, newCC);
 	}
 
 
 	@Override
 	public Set<V> elements() {
-		return dotMap.nonEmptyKeys();
+		return dotMap.nonEmptyEntries().map(entry -> entry.getKey()).collect(Collectors.toSet());
 	}
 
 	@Override

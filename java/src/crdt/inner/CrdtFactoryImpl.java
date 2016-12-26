@@ -3,12 +3,14 @@ package crdt.inner;
 import crdt.api.CrdtFactory;
 import crdt.api.types.AWSet;
 import crdt.api.types.PNCounter;
+import crdt.api.types.RWSet;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.types.AWSetImpl;
 import crdt.inner.types.DWFlagImpl;
 import crdt.inner.types.EWFlagImpl;
 import crdt.inner.types.MVRegisterImpl;
 import crdt.inner.types.PNCounterImpl;
+import crdt.inner.types.RWSetImpl;
 
 public class CrdtFactoryImpl implements CrdtFactory {
 	private CausalContext cc;
@@ -35,8 +37,13 @@ public class CrdtFactoryImpl implements CrdtFactory {
 	}
 
 	@Override
-	public AWSet<String> createAWSet() {
+	public <E> AWSet<E> createAWSet() {
 		return new AWSetImpl<>(cc);
+	}
+
+	@Override
+	public <E> RWSet<E> createRWSet() {
+		return new RWSetImpl(cc);
 	}
 
 }

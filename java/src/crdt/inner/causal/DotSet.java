@@ -34,22 +34,18 @@ public class DotSet implements DotStore {
 	
 	public Set<Dot> minus(CausalContext cc) {
 		Set<Dot> newSet = new HashSet<>();
-		
-		dotSet.forEach(dot ->{
-			String nodeId = dot.nodeId;
-			Integer ccCounter = cc.causalContext.get(nodeId);
-		    if (ccCounter == null || ccCounter < dot.counter){
-		    	newSet.add(dot);
-		    }
-		});
+		newSet.addAll(dotSet);
+		newSet.removeAll(cc.dotSet);
 		return newSet;
 	}
+	
 	public boolean join(DotStore thatStore, CausalContext thisContext, CausalContext thatContext){
 		DotSet that = (DotSet)thatStore;
 		Set<Dot> newDotset = this.intersect(that);
 		newDotset.addAll(this.minus(thatContext));
 		newDotset.addAll(that.minus(thisContext));
 		if (this.dotSet.equals(newDotset)) return false;
+		
 		this.dotSet = newDotset;
 		return true;
 	}
@@ -95,5 +91,17 @@ public class DotSet implements DotStore {
 		} else if (!dotSet.equals(other.dotSet))
 			return false;
 		return true;
+	}
+
+
+	@Override
+	public DotStore createEmpty() {
+		return new DotSet();
+	}
+
+
+	@Override
+	public Set<Dot> dots() {
+		return new HashSet<>(dotSet);
 	}
 }

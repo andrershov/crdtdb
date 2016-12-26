@@ -1,5 +1,8 @@
 package crdt.inner.types;
 
+import java.util.Collections;
+import java.util.HashSet;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -79,9 +82,13 @@ public class PNCounterImpl implements PNCounter {
 	@JsonIgnore
 	private PNCounterImpl delta;
 	
-	@JsonCreator
-	public PNCounterImpl(@JsonProperty("cc") CausalContext cc, @JsonProperty("dotMap") DotFun<Pair> dotMap) {
+	private PNCounterImpl(CausalContext cc, DotFun<Pair> dotMap) {
 		this.cc = cc;
+		this.dotMap = dotMap;
+	}
+	
+	@JsonCreator
+	public PNCounterImpl(@JsonProperty("dotMap") DotFun<Pair> dotMap) {
 		this.dotMap = dotMap;
 	}
 
@@ -109,17 +116,22 @@ public class PNCounterImpl implements PNCounter {
 	}
 	
 	private PNCounterImpl updateDelta(Pair updatePair) {
-		Dot dot = cc.current();
+		Dot dot = cc.max().orElse(cc.next());
 		Pair p = dotMap.get(dot);
 		DotFun<Pair> newDotMap;
+		CausalContext newCC;
 		if (p != null) {
 			Pair newPair = p.add(updatePair);
 			newDotMap = new DotFun<>(dot, newPair);
+			newCC = new CausalContext(cc, newDotMap.dots());
 			return createAndMergeDelta(newDotMap, cc);
 		} else {
 			dot = cc.next();
 			newDotMap = new DotFun<Pair>(dot, updatePair);
-			return createAndMergeDelta(newDotMap, cc.addDot(dot));
+			HashSet<Dot> dots = new HashSet<>();
+			dots.add(dot);
+			newCC = new CausalContext(cc, dots);
+			return createAndMergeDelta(newDotMap, newCC);
 		}
 	}
 

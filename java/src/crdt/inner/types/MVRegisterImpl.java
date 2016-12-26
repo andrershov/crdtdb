@@ -10,7 +10,6 @@ import crdt.api.types.MVRegister;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.causal.Dot;
 import crdt.inner.causal.DotFun;
-import crdt.inner.causal.JoinFunction;
 
 public class MVRegisterImpl<V> implements MVRegister<V>  {
 	@JsonProperty
@@ -46,14 +45,17 @@ public class MVRegisterImpl<V> implements MVRegister<V>  {
 	}
 	
 	private MVRegisterImpl<V> writeDelta(V value){
-		Dot dot = cc.current();
+		Dot dot = cc.next();
 		DotFun<V> newDotMap = new DotFun<>(dot, value);
-		return createAndMergeDelta(newDotMap, cc.addDot(dot));
+		CausalContext newCC = new CausalContext(cc, dotMap.dots());
+		newCC.addDot(dot);
+		return createAndMergeDelta(newDotMap, newCC);
 	}
 	
 	private MVRegisterImpl<V> clearDelta(){
-		DotFun<V> dotMap = new DotFun<>();
-		return createAndMergeDelta(dotMap, cc);
+		DotFun<V> newDotMap = new DotFun<>();
+		CausalContext newCC = new CausalContext(cc, newDotMap.dots());
+		return createAndMergeDelta(newDotMap, newCC);
 	}
 	
 	public void write(V value){

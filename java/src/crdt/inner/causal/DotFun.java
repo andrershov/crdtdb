@@ -1,7 +1,9 @@
 package crdt.inner.causal;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -39,7 +41,7 @@ public class DotFun<V> implements DotStore {
 					if (thisValue.equals(thatValue)){
 						newValue = thisValue;
 					} else {
-						throw new RuntimeException("DotFun values should either implement Lattice interface or be equal for same dot");
+						throw new RuntimeException("DotFun values should either implement Lattice interface or be equal for same dot: thisVal = "+thisValue+", thatValue="+thatValue);
 					}
 				}
 				
@@ -53,16 +55,10 @@ public class DotFun<V> implements DotStore {
 	
 	
 	public Map<Dot, V> minus(CausalContext cc) {
-		Map<Dot, V> newMap = new HashMap<>();
-		
-		dotFun.forEach((dot, value) ->{
-			String nodeId = dot.nodeId;
-			Integer ccCounter = cc.causalContext.get(nodeId);
-		    if (ccCounter == null || ccCounter < dot.counter){
-		    	newMap.put(dot, value);
-		    }
-		});
-		return newMap;
+		Map<Dot, V> map = new HashMap<>();
+		map.putAll(this.dotFun);
+		map.keySet().removeAll(cc.dotSet);
+		return map;
 	}
 	
 	public void put(Dot dot, V value){
@@ -103,5 +99,15 @@ public class DotFun<V> implements DotStore {
 
 	public V get(Dot dot) {
 		return dotFun.get(dot);
+	}
+
+	@Override
+	public DotStore createEmpty() {
+		return new DotFun<>();
+	}
+
+	@Override
+	public Set<Dot> dots() {
+		return new HashSet<>(dotFun.keySet());
 	}
 }

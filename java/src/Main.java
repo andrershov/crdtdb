@@ -7,6 +7,7 @@ import crdt.api.types.DWFlag;
 import crdt.api.types.EWFlag;
 import crdt.api.types.MVRegister;
 import crdt.api.types.PNCounter;
+import crdt.api.types.RWSet;
 import crdt.inner.CrdtDbImpl;
 import crdt.inner.DeltaStorage;
 import crdt.inner.conn.LocalNodeJsonConnections;
@@ -17,17 +18,55 @@ import crdt.inner.types.MVRegisterImpl;
 
 public class Main {
 	public static void main(String[] args) throws IOException, InterruptedException {
-		// testFlags();
+		 testDWFlag();
 		// testMVReg();
 
-		//testReplication();
 		
 		//testItems();
 		
-	//	testCounter();
-		testAWSet();
+		//testCounter();
+		//testAWSet();
+		
+	//	testRWSet();
 	}
 	
+	private static void testRWSet() {
+		LocalNodeJsonConnections conn12 = new LocalNodeJsonConnections("node1", "node2");
+		CrdtDbImpl db1 = new CrdtDbImpl(conn12.getConn1());
+		CrdtDbImpl db2 = new CrdtDbImpl(conn12.getConn2());
+		
+		
+		Model modelA = db1.load("node1", "reg");
+		RWSet<String> set = modelA.factory().createRWSet();
+		set.add("el1_1");
+	
+		System.out.println(set);
+		System.out.println(set.elements());
+		modelA.setRoot(set);
+		db1.store("reg", modelA);
+		
+		conn12.breakConn();
+		
+		Model modelB = db2.load("node2", "reg");
+		RWSet<String> setB = (RWSet<String>) modelB.getRoot();
+		System.out.println(setB);
+		setB.remove("el1_1");
+		db2.store("reg", modelB);
+		
+		
+		modelA = db1.load("node1", "reg");
+		set = (RWSet<String>) modelA.getRoot();
+		set.remove("el1_1");
+		set.add("el1_1");
+		db1.store("reg", modelA);
+		
+		conn12.fixConn();
+		
+		modelB = db2.load("node2", "reg");
+		setB = (RWSet<String>) modelB.getRoot();
+		System.out.println(setB.elements());
+	}
+
 	private static void testAWSet() throws InterruptedException {
 		LocalNodeJsonConnections conn12 = new LocalNodeJsonConnections("node1", "node2");
 		CrdtDbImpl db1 = new CrdtDbImpl(conn12.getConn1());
@@ -49,15 +88,15 @@ public class Main {
 		set.add("el1_1");
 		db1.store("reg", model);
 		
-		conn12.fixConn();
+		
 		
 		Model modelB = db2.load("node2", "reg");
 		AWSet<String> setB = (AWSet<String>) modelB.getRoot();
 		System.out.println(setB);
 		setB.remove("el1_1");
 		db2.store("reg", modelB);
-		
 	
+		conn12.fixConn();
 		
 		modelA = db1.load("node1", "reg");
 		set  = (AWSet<String>) modelA.getRoot();
@@ -89,7 +128,6 @@ public class Main {
 		
 		conn12.fixConn();
 		
-		Thread.sleep(100);
 		modelB = db1.load("node2", "reg");
 		counterB = (PNCounter) modelB.getRoot();
 		System.out.println(counterB.value());
@@ -223,6 +261,7 @@ public class Main {
 		regA = modelA.factory().createMVRegister();
 		modelA.setRoot(regA);
 		regA.write("A1");
+		
 		db.store("reg", modelA);
 
 		modelA = db.load("nodeA", "reg");
@@ -243,34 +282,18 @@ public class Main {
 
 		modelA = db.load("nodeA", "reg");
 		regA = (MVRegister<String>) modelA.getRoot();
-		regA.write("A2");
-		db.store("reg", modelA);
+		
 
-		modelA = db.load("nodeA", "reg");
-		regA = (MVRegister<String>) modelA.getRoot();
-		regA.write("A3");
+		System.out.println(regA.values());
 
-		System.out.println(regA.getDelta());
-
-		db.store("reg", modelA);
-
-		DeltaStorage ds = db.getDeltaStorage();
-		// System.out.println(ds.getDeltaInterval());
 	}
 
-	public static void testFlags() {
+	public static void testDWFlag() {
 		CrdtDb db = new CrdtDbImpl();
 		Model modelA = db.load("nodeA", "flag");
-
-		DWFlag flagA = (DWFlag) modelA.getRoot();
-
-		if (flagA == null) {
-			flagA = modelA.factory().createDWFlag();
-			modelA.setRoot(flagA);
-		}
-
+		DWFlag flagA = modelA.factory().createDWFlag();
+		modelA.setRoot(flagA);
 		flagA.enable();
-
 		db.store("flag", modelA); // Flag is initially enabled
 
 		modelA = db.load("nodeA", "flag");
@@ -285,8 +308,8 @@ public class Main {
 		db.store("flag", modelA); // now flag is disabled
 
 		db.store("flag", modelB); // flag was concurrently modified by B, it was
-									// enabled on B. And enabled wins => now
-									// flag is enabled
+									// enabled on B. And disable wins => now
+									// flag is disabled
 
 		modelA = db.load("nodeA", "flag");
 		flagA = (DWFlag) modelA.getRoot();

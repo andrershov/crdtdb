@@ -5,13 +5,17 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import crdt.inner.serializers.PrimitiveKeyDeserializer;
 
 public class DotMap<K> implements DotStore {
 	@JsonProperty("dotMap")
+	@JsonDeserialize(keyUsing = PrimitiveKeyDeserializer.class)
 	public Map<K, DotStore> dotMap;
 
 	public DotMap(K key, DotStore dotStore) {
@@ -44,16 +48,13 @@ public class DotMap<K> implements DotStore {
 		for (K key : keySet) {
 			DotStore thisVal = this.dotMap.get(key);
 			DotStore thatVal = thatDotMap.dotMap.get(key);
-			if (thisVal == null) {
-				if (!thatVal.isEmpty()) {
-					newDotMap.put(key, thatVal.copy());
-					changed = true;
-				}
-			} else if (thatVal == null) {
-				if (!thisVal.isEmpty()) {
-					newDotMap.put(key, thisVal);
-				}
-			} else {
+			if (thisVal == null){
+				thisVal = thatVal.createEmpty();
+			}
+			if (thatVal == null){
+				thatVal = thisVal.createEmpty();
+			}
+			if (!thisVal.isEmpty() || !thatVal.isEmpty()){
 				changed |= thisVal.join(thatVal, thisContext, thatContext);
 				if (!thisVal.isEmpty()) {
 					newDotMap.put(key, thisVal);
@@ -70,9 +71,8 @@ public class DotMap<K> implements DotStore {
 		return dotMap.isEmpty();
 	}
 
-	public Set<K> nonEmptyKeys() {
-		return dotMap.entrySet().stream().filter(entry -> !entry.getValue().isEmpty()).map(entry -> entry.getKey())
-				.collect(Collectors.toSet());
+	public Stream<Entry<K, DotStore>> nonEmptyEntries() {
+		return dotMap.entrySet().stream().filter(entry -> !entry.getValue().isEmpty());
 	}
 	
 	@Override
@@ -87,6 +87,28 @@ public class DotMap<K> implements DotStore {
 	@Override
 	public String toString() {
 		return "DotMap [dotMap=" + dotMap + "]";
+	}
+
+	@Override
+	public DotStore createEmpty() {
+		return new DotMap<>();
+	}
+
+	@Override
+	public Set<Dot> dots() {
+		Set<Dot> dots = new HashSet<>();
+		for (DotStore dotStore : dotMap.values()){
+			dots.addAll(dotStore.dots());
+		}
+		return dots;
+	}
+
+	public DotStore get(K key) {
+		DotStore res = dotMap.get(key);
+		if (res == null) {
+			res = new EmptyDotStore();
+		}
+		return res;
 	}
 	
 	

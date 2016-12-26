@@ -1,7 +1,6 @@
 package crdt.inner.causal;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -10,102 +9,78 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class CausalContext {
 	@JsonProperty
-	Map<String, Integer> causalContext;
+	Set<Dot> dotSet;
 	@JsonIgnore
 	String nodeId;
 	
+	public CausalContext(CausalContext that, Set<Dot> dots) {
+		this.dotSet = dots;
+		this.nodeId = that.nodeId;
+	}
+	
+	private CausalContext(){
+		
+	}
+		
 	public static CausalContext fromScratch(String nodeId){
 		CausalContext cc = new CausalContext();
-		cc.causalContext = new HashMap<>();
+		cc.dotSet = new HashSet<>();
 		cc.nodeId = nodeId;
 		return cc;
 	}
 	
 	@JsonCreator
-	public static CausalContext fromMap(@JsonProperty("causalContext") Map<String, Integer> causalContext){
+	public static CausalContext fromMap(@JsonProperty("dotSet") Set<Dot> dotSet){
 		CausalContext cc = new CausalContext();
-		cc.causalContext = causalContext;
+		cc.dotSet = dotSet;
 		return cc;
 	}
 	
 	public static CausalContext fromExisting(CausalContext that){
 		CausalContext cc = new CausalContext();
 		cc.nodeId = that.nodeId;
-		cc.causalContext = new HashMap<>(that.causalContext);
+		cc.dotSet = new HashSet<>(that.dotSet);
 		return cc;
 	}
 	
 	public static CausalContext fromExistingAndNewNodeId(CausalContext that, String nodeId){
 		CausalContext cc = new CausalContext();
 		cc.nodeId = nodeId;
-		cc.causalContext = new HashMap<>(that.causalContext);
+		cc.dotSet = new HashSet<>(that.dotSet);
 		return cc;
 	}
 	
 	public boolean dotin(Dot dot) {
-		String nodeId = dot.nodeId;
-		if (causalContext.get(nodeId) >= dot.counter) {
-			return true;
-		}
-		return false;
+		return dotSet.contains(dot);
 	}
 
 	public Dot next() {
-		Integer counter = causalContext.get(nodeId);
-		if (counter == null)
-			counter = 0;
-		return new Dot(nodeId, counter + 1);
+		Optional<Dot> maxDot = max();
+		if (maxDot.isPresent()){
+			return new Dot(nodeId, maxDot.get().counter+1);
+		} else {
+			return new Dot(nodeId, 1);
+		}
+	}
+	
+	public void addDot(Dot dot) {
+		dotSet.add(dot);
 	}
 
-	public CausalContext addDot(Dot dot) {
-		CausalContext newCausalContext = fromExisting(this);
-		newCausalContext.causalContext.put(dot.nodeId, dot.counter);
-		return newCausalContext;
-	}
-
-	private static int max(Integer a, Integer b) {
-		if (a == null)
-			return b;
-		if (b == null)
-			return a;
-		return Math.max(a, b);
-	}
 
 	public void join(CausalContext that) {
-		Set<String> nodeIdsSet = new HashSet<>(causalContext.keySet());
-		nodeIdsSet.addAll(that.causalContext.keySet());
-		Map<String, Integer> newCausalContext = new HashMap<>();
-		nodeIdsSet.forEach(nodeId -> {
-			newCausalContext.put(nodeId,
-					max(this.causalContext.get(nodeId), that.causalContext.get(nodeId)));
-		});
-		causalContext = newCausalContext;
+		this.dotSet.addAll(that.dotSet);
 	}
+
 
 	@Override
 	public String toString() {
-		return "CausalContext [causalContext=" + causalContext + ", nodeId=" + nodeId + "]";
-	}
-
-	public boolean contains(CausalContext that) {
-		Set<String> nodeIdsSet = new HashSet<>(causalContext.keySet());
-		nodeIdsSet.addAll(that.causalContext.keySet());
-		for (String nodeId: nodeIdsSet){
-			Integer thisCounter = this.causalContext.get(nodeId);
-			Integer thatCounter = that.causalContext.get(nodeId);
-			if (thisCounter==null || (thatCounter!=null && thatCounter > thisCounter)){
-				return false;
-			}
-		}
-		return true;
+		return "CausalContext [dotSet=" + dotSet + ", nodeId=" + nodeId + "]";
 	}
 
 	
-	public Dot current() {
-		Integer counter = causalContext.get(nodeId);
-		if (counter == null)
-			counter = 0;
-		return new Dot(nodeId, counter);
+	public Optional<Dot> max() {
+		return dotSet.stream().filter(dot -> dot.nodeId.equals(nodeId)).reduce((acc, dot) -> dot.counter > acc.counter ? dot : acc);
 	}
 	
 	
