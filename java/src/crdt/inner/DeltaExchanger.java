@@ -9,8 +9,11 @@ import crdt.inner.conn.NodeConnection;
 public class DeltaExchanger {
 	private DeltaStorage storage;
 	private List<? extends NodeConnection> nodes;
-	private Map<String, Integer> ackMap = new HashMap<>();
+	
 	private CrdtDbImpl db;
+	
+	
+	private Map<String, Map<String, Integer>> globalAckMap = new HashMap<>();
 	
 	public DeltaExchanger(CrdtDbImpl db, DeltaStorage storage, List<? extends NodeConnection> nodes) {
 		this.storage = storage;
@@ -21,20 +24,22 @@ public class DeltaExchanger {
 		}
 	}
 	
-	public synchronized void shipState(){
-		nodes.forEach(node->shipState(node));
+	public synchronized void shipState(String key){
+		nodes.forEach(node->shipState(key, node));
 	}
 	
-	private synchronized void shipState(NodeConnection node){
-		int newestDeltaCounter = storage.getNewestDeltaCounter();
+	private synchronized void shipState(String key, NodeConnection node){
+		int newestDeltaCounter = storage.getNewestDeltaCounter(key);
+		Map<String, Integer> ackMap = globalAckMap.computeIfAbsent(key, k -> new HashMap<>());
+		
 		Integer newestAckCounter = ackMap.get(node.getName());
-		if (newestAckCounter == null || storage.getOldestDeltaCounter() > newestAckCounter){
+		if (newestAckCounter == null || storage.getOldestDeltaCounter(key) > newestAckCounter){
 			ModelImpl model = db.load(null, "reg");
 			if (model.getRoot() != null) {
 				node.send(model, newestDeltaCounter);
 			}
 		} else {
-			ModelImpl deltaInterval = storage.getDeltaInterval(newestAckCounter);
+			ModelImpl deltaInterval = storage.getDeltaInterval(key, newestAckCounter);
 			if (deltaInterval != null) {
 				node.send(deltaInterval, newestDeltaCounter);
 			}
@@ -42,11 +47,12 @@ public class DeltaExchanger {
 	}
 	
 	public synchronized void  onReceive(NodeConnection node, ModelImpl deltaInterval, int counter) {
-		db.storeDelta("reg", deltaInterval);
-		node.sendAck(counter);
+		db.storeDelta(deltaInterval);
+		node.sendAck(deltaInterval.getKey(), counter);
 	}
 
-	public synchronized void onAck(NodeConnection nodeConnection, int ackCounter) {
+	public synchronized void onAck(NodeConnection nodeConnection, String key, int ackCounter) {
+		Map<String, Integer> ackMap = globalAckMap.computeIfAbsent(key, k -> new HashMap<>());
 		ackMap.compute(nodeConnection.getName(), (k, currCounter)->{
 			if (currCounter == null || currCounter < ackCounter){
 				return ackCounter;
@@ -56,7 +62,6 @@ public class DeltaExchanger {
 	}
 
 	public void connectionRestored(NodeConnection localNodeConnection) {
-		shipState(localNodeConnection);
+		storage.keySet().forEach(key -> shipState(key, localNodeConnection));
 	}
-	
 }

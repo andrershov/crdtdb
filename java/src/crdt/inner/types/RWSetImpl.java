@@ -48,7 +48,7 @@ public class RWSetImpl<V> implements RWSet<V> {
 		if (that == null) return false;
 		if (!(that instanceof RWSetImpl)) throw new RuntimeException("CRDT types do not match");
 		RWSetImpl<V> thatSet = (RWSetImpl<V>)that;
-	
+		
 		if (dotMap.join(thatSet.dotMap, cc, thatSet.cc)){
 			cc.join(thatSet.cc);
 			return true;

@@ -11,10 +11,10 @@ public interface NodeConnection {
 
 	void setDeltaExchanger(DeltaExchanger deltaExchanger);
 
-	void sendAck(int counter);
-
 	void breakConn();
 
 	void fixConn();
+
+	void sendAck(String key, int counter);
 
 }

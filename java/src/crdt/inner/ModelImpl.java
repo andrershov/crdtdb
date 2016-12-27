@@ -14,59 +14,57 @@ public class ModelImpl implements Model {
 	private CRDT crdt;
 	@JsonProperty
 	private CausalContext cc;
-	
+	@JsonProperty
+	private String key;
+
 	private ModelImpl() {
 	}
-	
-	public static ModelImpl fromScratch(String nodeId){
-		ModelImpl m = new ModelImpl();
-		m.cc = CausalContext.fromScratch(nodeId);
-		return m;
-	}
-	
-	public static ModelImpl fromExistingAndNewNodeId(String nodeId, ModelImpl that){
-		ModelImpl m = new ModelImpl();
-		m.cc =CausalContext.fromExistingAndNewNodeId(that.cc, nodeId);
-		m.crdt = that.getRoot().clone(m.cc);
-		return m;
-	}
-	
+
 	@JsonCreator
-	public static ModelImpl fromCCandCrdt(@JsonProperty("cc") CausalContext cc, @JsonProperty("crdt") CRDT crdt){
+	public static ModelImpl fromCCandCrdt(@JsonProperty("cc") CausalContext cc, @JsonProperty("crdt") CRDT crdt) {
 		ModelImpl m = new ModelImpl();
 		m.crdt = crdt.clone(cc);
 		m.cc = cc;
 		return m;
 	}
-	
-	
-	public ModelImpl(CausalContext cc, CRDT crdt) {
-		this.cc = cc;
-		this.crdt = crdt;
+
+	public static ModelImpl fromScratch(String nodeId, String key) {
+		ModelImpl m = new ModelImpl();
+		m.cc = CausalContext.fromScratch(nodeId);
+		m.key = key;
+		return m;
+	}
+
+	public static ModelImpl fromExistingAndNewNodeId(String nodeId, ModelImpl that) {
+		ModelImpl m = new ModelImpl();
+		m.key = that.key;
+		m.cc = CausalContext.fromExistingAndNewNodeId(that.cc, nodeId);
+		m.crdt = that.getRoot().clone(m.cc);
+		return m;
 	}
 
 	@JsonIgnore
-	public CRDT getRoot(){
+	public CRDT getRoot() {
 		return crdt;
 	}
-	
-	public CrdtFactory factory(){
+
+	public CrdtFactory factory() {
 		return new CrdtFactoryImpl(cc);
 	}
 
 	public void setRoot(CRDT crdt) {
 		this.crdt = crdt;
 	}
-	
+
 	@JsonIgnore
-	public ModelImpl getDelta(){
+	public ModelImpl getDelta() {
 		ModelImpl m = new ModelImpl();
 		m.cc = cc;
 		m.crdt = crdt.getDelta();
+		m.key = key;
 		return m;
 	}
 
-	
 	public boolean joinDelta(ModelImpl delta) {
 		if (crdt.join(delta.getRoot())) {
 			cc.join(delta.cc);
@@ -77,6 +75,11 @@ public class ModelImpl implements Model {
 
 	@Override
 	public String toString() {
-		return "Model [crdt=" + crdt + ", cc=" + cc + "]";
+		return "ModelImpl [crdt=" + crdt + ", cc=" + cc + ", key=" + key + "]";
+	}
+
+	@Override
+	public String getKey() {
+		return key;
 	}
 }

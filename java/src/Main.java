@@ -18,7 +18,7 @@ import crdt.inner.types.MVRegisterImpl;
 
 public class Main {
 	public static void main(String[] args) throws IOException, InterruptedException {
-		 testDWFlag();
+		 //testDWFlag();
 		// testMVReg();
 
 		
@@ -27,7 +27,7 @@ public class Main {
 		//testCounter();
 		//testAWSet();
 		
-	//	testRWSet();
+		testRWSet();
 	}
 	
 	private static void testRWSet() {
@@ -43,7 +43,7 @@ public class Main {
 		System.out.println(set);
 		System.out.println(set.elements());
 		modelA.setRoot(set);
-		db1.store("reg", modelA);
+		db1.store(modelA);
 		
 		conn12.breakConn();
 		
@@ -51,14 +51,14 @@ public class Main {
 		RWSet<String> setB = (RWSet<String>) modelB.getRoot();
 		System.out.println(setB);
 		setB.remove("el1_1");
-		db2.store("reg", modelB);
+		db2.store(modelB);
 		
 		
 		modelA = db1.load("node1", "reg");
 		set = (RWSet<String>) modelA.getRoot();
 		set.remove("el1_1");
 		set.add("el1_1");
-		db1.store("reg", modelA);
+		db1.store(modelA);
 		
 		conn12.fixConn();
 		
@@ -77,7 +77,7 @@ public class Main {
 		AWSet<String> set = modelA.factory().createAWSet();
 		set.add("el1_1");
 		modelA.setRoot(set);
-		db1.store("reg", modelA);
+		db1.store(modelA);
 
 		conn12.breakConn();
 		
@@ -86,7 +86,7 @@ public class Main {
 		System.out.println(set);
 		set.remove("el1_1");
 		set.add("el1_1");
-		db1.store("reg", model);
+		db1.store(model);
 		
 		
 		
@@ -94,7 +94,7 @@ public class Main {
 		AWSet<String> setB = (AWSet<String>) modelB.getRoot();
 		System.out.println(setB);
 		setB.remove("el1_1");
-		db2.store("reg", modelB);
+		db2.store(modelB);
 	
 		conn12.fixConn();
 		
@@ -116,7 +116,7 @@ public class Main {
 		counter.decrement(5);
 		System.out.println(counter.value());
 		modelA.setRoot(counter);
-		db1.store("reg", modelA);
+		db1.store(modelA);
 		
 		Model modelB = db2.load("node2", "reg");
 		PNCounter counterB = modelB.factory().createPNCounter();
@@ -124,7 +124,7 @@ public class Main {
 		counterB.decrement(15);
 		System.out.println(counter.value());
 		modelB.setRoot(counterB);
-		db2.store("reg", modelB);
+		db2.store(modelB);
 		
 		conn12.fixConn();
 		
@@ -164,7 +164,7 @@ public class Main {
 		items.item1 = item1;
 		items.item2 = item2;
 		modelA.setRoot(items);
-		db1.store("reg", modelA);
+		db1.store(modelA);
 		
 		Model modelB= db2.load("node2", "reg");
 		ItemCRDT item1B = createItem(modelB, "item1_2", false);
@@ -173,7 +173,7 @@ public class Main {
 		itemsB.item1 = item1B;
 		itemsB.item2 = item2B;
 		modelB.setRoot(itemsB);
-		db2.store("reg", modelB);
+		db2.store(modelB);
 		
 		conn12.fixConn();
 		
@@ -184,7 +184,7 @@ public class Main {
 		items.item1.done.disable();
 		System.out.println(items);
 		
-		db1.store("reg", modelA);
+		db1.store(modelA);
 		
 		
 		
@@ -214,7 +214,7 @@ public class Main {
 		regA = modelA.factory().createMVRegister();
 		modelA.setRoot(regA);
 		regA.write("node1_1");
-		db1.store("reg", modelA);
+		db1.store(modelA);
 		Thread.sleep(100);
 
 		Model modelB = db2.load("node2", "reg");
@@ -222,7 +222,7 @@ public class Main {
 		regB = modelB.factory().createMVRegister();
 		modelB.setRoot(regB);
 		regB.write("node2_1");
-		db2.store("reg", modelB);
+		db2.store(modelB);
 		Thread.sleep(100);
 
 		Model modelC = db3.load("node3", "reg");
@@ -230,7 +230,7 @@ public class Main {
 		regC = modelC.factory().createMVRegister();
 		modelC.setRoot(regC);
 		regC.write("node3_1");
-		db3.store("reg", modelC);
+		db3.store(modelC);
 		Thread.sleep(100);
 
 		conn13.fixConn();
@@ -262,7 +262,7 @@ public class Main {
 		modelA.setRoot(regA);
 		regA.write("A1");
 		
-		db.store("reg", modelA);
+		db.store(modelA);
 
 		modelA = db.load("nodeA", "reg");
 		regA = (MVRegister<String>) modelA.getRoot();
@@ -276,9 +276,9 @@ public class Main {
 		MVRegister<String> regC = (MVRegister<String>) modelC.getRoot();
 		regC.write("C1");
 
-		db.store("reg", modelA);
-		db.store("reg", modelB);
-		db.store("reg", modelC);
+		db.store(modelA);
+		db.store(modelB);
+		db.store(modelC);
 
 		modelA = db.load("nodeA", "reg");
 		regA = (MVRegister<String>) modelA.getRoot();
@@ -294,7 +294,7 @@ public class Main {
 		DWFlag flagA = modelA.factory().createDWFlag();
 		modelA.setRoot(flagA);
 		flagA.enable();
-		db.store("flag", modelA); // Flag is initially enabled
+		db.store(modelA); // Flag is initially enabled
 
 		modelA = db.load("nodeA", "flag");
 		flagA = (DWFlag) modelA.getRoot();
@@ -305,9 +305,9 @@ public class Main {
 		flagB.disable();
 		flagB.enable();
 
-		db.store("flag", modelA); // now flag is disabled
+		db.store(modelA); // now flag is disabled
 
-		db.store("flag", modelB); // flag was concurrently modified by B, it was
+		db.store(modelB); // flag was concurrently modified by B, it was
 									// enabled on B. And disable wins => now
 									// flag is disabled
 
@@ -325,8 +325,8 @@ public class Main {
 		modelB.setRoot(flagB);
 		flagB.enable();
 
-		db.store("concurrentFlag", modelA);
-		db.store("concurrentFlag", modelB);
+		db.store(modelA);
+		db.store(modelB);
 
 		modelA = db.load("nodeA", "concurrentFlag");
 		flagA = (DWFlag) modelA.getRoot();

@@ -30,19 +30,19 @@ public class CrdtDbImpl implements CrdtDb {
 	public ModelImpl load(String nodeId, String key) {
 		ModelImpl model = map.get(key);
 		if (model == null) {
-			return ModelImpl.fromScratch(nodeId);
+			return ModelImpl.fromScratch(nodeId, key);
 		}
 		return ModelImpl.fromExistingAndNewNodeId(nodeId, model);
 	}
 	
-	public void store(String key, Model model) {
+	public void store(Model model) {
 		ModelImpl delta = ((ModelImpl)model).getDelta();
-		storeDelta(key, delta);
+		storeDelta(delta);
 	}
 
-	public void storeDelta(String key, ModelImpl delta) {
+	public void storeDelta(ModelImpl delta) {
 		AtomicBoolean storeDelta = new AtomicBoolean(true);
-		map.compute(key, (ig, oldModel) -> {
+		map.compute(delta.getKey(), (ig, oldModel) -> {
 			if (oldModel == null) {
 				return delta;
 			} 
@@ -51,7 +51,7 @@ public class CrdtDbImpl implements CrdtDb {
 		});
 		if (storeDelta.get()){
 			deltaStorage.store(delta);
-			deltaExchanger.shipState();
+			deltaExchanger.shipState(delta.getKey());
 		}
 	}
 

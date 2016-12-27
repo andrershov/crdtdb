@@ -55,7 +55,7 @@ public class LocalNodeJsonConnection implements NodeConnection {
 		if (crdtMsg instanceof AckMessage){
 			AckMessage ackMsg = (AckMessage) crdtMsg;
 			System.out.println("Received ack msg from node "+nodeId+" msg: "+msg);
-			deltaExchanger.onAck(this, ackMsg.counter);
+			deltaExchanger.onAck(this, ackMsg.key, ackMsg.counter);
 		} else if (crdtMsg instanceof DeltaMessage){
 			DeltaMessage deltaMsg = (DeltaMessage) crdtMsg;
 			System.out.println("Received delta msg from node "+nodeId+" msg: "+msg);
@@ -67,9 +67,9 @@ public class LocalNodeJsonConnection implements NodeConnection {
 	 * @see crdt.inner.conn.NodeConnection#sendAck(int)
 	 */
 	@Override
-	public void sendAck(int counter) {
+	public void sendAck(String key, int counter) {
 		if (broken) return;
-		String msg = serializer.serialize(new AckMessage(counter));
+		String msg = serializer.serialize(new AckMessage(key, counter));
 		System.out.println("Sending ack to node "+nodeId+" msg: "+msg);
 		remoteConnection.receive(msg);
 	}
