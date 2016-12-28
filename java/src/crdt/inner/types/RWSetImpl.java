@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import crdt.api.CRDT;
@@ -18,28 +17,21 @@ import crdt.inner.causal.Dot;
 import crdt.inner.causal.DotMap;
 import crdt.inner.causal.DotSet;
 import crdt.inner.causal.DotStore;
+import crdt.inner.types.abstr.DotMapCrdt;
 
-public class RWSetImpl<V> implements RWSet<V> {
+public class RWSetImpl<V> extends DotMapCrdt<V> implements RWSet<V> {
 
-	@JsonIgnore
-	private CausalContext cc;
-	@JsonProperty("dotMap")
-	private DotMap<V> dotMap = new DotMap<>();
-	@JsonIgnore
-	private RWSetImpl<V> delta;
-	
 	private RWSetImpl(CausalContext cc, DotMap<V> dotMap){
-		this.cc = cc;
-		this.dotMap = dotMap;
+		super(cc, dotMap);
 	}
 
 	public RWSetImpl(CausalContext cc) {
-		this(cc, new DotMap<>());
+		super(cc);
 	}
 
 	@JsonCreator
 	public RWSetImpl(@JsonProperty("dotMap") DotMap<V> dotMap) {
-		this.dotMap = dotMap;
+		super(dotMap);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -49,22 +41,9 @@ public class RWSetImpl<V> implements RWSet<V> {
 		if (!(that instanceof RWSetImpl)) throw new RuntimeException("CRDT types do not match");
 		RWSetImpl<V> thatSet = (RWSetImpl<V>)that;
 		
-		if (dotMap.join(thatSet.dotMap, cc, thatSet.cc)){
-			cc.join(thatSet.cc);
-			return true;
-		}
-		return false;
+		return join(thatSet);
 	}
 
-	@Override
-	public CRDT clone(CausalContext cc) {
-		return new RWSetImpl<>(cc, dotMap.copy());
-	}
-
-	@Override
-	public CRDT getDelta() {
-		return delta;
-	}
 
 	@Override
 	public void add(V elem) {
@@ -89,17 +68,6 @@ public class RWSetImpl<V> implements RWSet<V> {
 		return updateDelta(elem, false);
 	}
 
-	private RWSetImpl<V> createAndMergeDelta(DotMap<V> newDotMap, CausalContext newCC) {
-		RWSetImpl<V> currentDelta = new RWSetImpl<>(newCC, newDotMap);
-		if (delta != null) {
-			delta.join(currentDelta);
-		} else {
-			delta = currentDelta;
-		}
-
-		return currentDelta;
-	}
-
 	@Override
 	public void remove(V elem) {
 		this.join(removeDelta(elem));
@@ -122,7 +90,17 @@ public class RWSetImpl<V> implements RWSet<V> {
 	
 	@Override
 	public String toString() {
+		return elements().toString();
+	}
+	
+
+	@Override
+	public String innerToString() {
 		return "RWSetImpl [dotMap=" + dotMap + ", cc=" + cc + ", delta=" + delta + "]";
 	}
 
+	@Override
+	protected DotMapCrdt<V> createCRDT(DotMap<V> dotMap, CausalContext cc) {
+		return new RWSetImpl<>(cc, dotMap);
+	}
 }

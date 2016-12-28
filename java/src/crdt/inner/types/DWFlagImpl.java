@@ -1,7 +1,6 @@
 package crdt.inner.types;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import crdt.api.CRDT;
@@ -9,43 +8,26 @@ import crdt.api.types.DWFlag;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.causal.Dot;
 import crdt.inner.causal.DotSet;
+import crdt.inner.types.abstr.DotSetCrdt;
 
-public class DWFlagImpl implements DWFlag  {
-	@JsonIgnore
-	private DWFlagImpl delta;
-	@JsonProperty("dotSet")
-	protected DotSet dotSet;
-	@JsonIgnore
-	protected CausalContext cc;
+public class DWFlagImpl extends DotSetCrdt implements DWFlag  {
 	
-	
-	private DWFlagImpl(CausalContext cc, DotSet dotSet){
-		this.cc = cc;
-		this.dotSet = dotSet;
+	protected DWFlagImpl(CausalContext cc, DotSet dotSet){
+		super(cc, dotSet);
 	}
 	
 	public DWFlagImpl(CausalContext cc){
-		this(cc, new DotSet());
+		super(cc);
 	}
 	
 	@JsonCreator
 	public DWFlagImpl(@JsonProperty("dotSet") DotSet dotSet){
-		this.dotSet = dotSet;
+		super(dotSet);
 	}
 	
 	
-	private DWFlagImpl createAndMergeDelta(DotSet newDotset, CausalContext newCC) {
-		DWFlagImpl currentDelta =  new DWFlagImpl(newCC, newDotset);
-		if (delta != null) {
-			delta.join(currentDelta);
-		} else {
-			delta = currentDelta;
-		}
-		
-		return currentDelta;
-	}
-	
-	private DWFlagImpl disableDelta(){
+
+	private DotSetCrdt disableDelta(){
 		Dot dot = cc.next();
 		DotSet newDotset = new DotSet(dot);
 		CausalContext newCC = new CausalContext(cc, dotSet.dots());
@@ -53,7 +35,7 @@ public class DWFlagImpl implements DWFlag  {
 		return createAndMergeDelta(newDotset, newCC);
 	}
 	
-	private DWFlagImpl enableDelta(){
+	private DotSetCrdt enableDelta(){
 		DotSet newDotset = new DotSet();
 		CausalContext newCC = new CausalContext(cc, dotSet.dots());
 		return createAndMergeDelta(newDotset, newCC);
@@ -61,13 +43,11 @@ public class DWFlagImpl implements DWFlag  {
 	
 	
 	public void enable(){
-		DWFlagImpl currentDelta = enableDelta();
-		this.join(currentDelta);
+		this.join(enableDelta());
 	}
 	
 	public void disable(){
-		DWFlagImpl currentDelta = disableDelta();
-		this.join(currentDelta);
+		this.join(disableDelta());
 	}
 	
 		
@@ -75,12 +55,8 @@ public class DWFlagImpl implements DWFlag  {
 		if (that == null) return false;
 		if (!(that instanceof DWFlagImpl)) throw new RuntimeException("CRDT types do not match");
 		DWFlagImpl thatFlag = (DWFlagImpl)that;
-	
-		if (dotSet.join(thatFlag.dotSet, cc, thatFlag.cc)){
-			cc.join(thatFlag.cc);
-			return true;
-		}
-		return false;
+		
+		return join(thatFlag);
 	}
 	
 	public boolean read(){
@@ -92,14 +68,22 @@ public class DWFlagImpl implements DWFlag  {
 		return new DWFlagImpl(cc, dotSet.copy());
 	}
 
-	@Override
-	@JsonIgnore
-	public DWFlagImpl getDelta() {
-		return delta;
-	}
+	
 
 	@Override
 	public String toString() {
-		return "EWFlag [delta=" + delta + ", dotSet=" + dotSet + ", cc=" + cc + "]";
+		return Boolean.toString(read());
+	}
+
+
+	@Override
+	public String innerToString() {
+		return "DWFlag [delta=" + delta + ", dotSet=" + dotSet + ", cc=" + cc + "]";
+	}
+
+	
+	@Override
+	protected DotSetCrdt createCRDT(DotSet dotSet, CausalContext cc) {
+		return new DWFlagImpl(cc, dotSet);
 	}
 }

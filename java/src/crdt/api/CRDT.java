@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import crdt.inner.causal.CausalContext;
+import crdt.inner.types.AWMapImpl;
 import crdt.inner.types.AWSetImpl;
 import crdt.inner.types.DWFlagImpl;
 import crdt.inner.types.EWFlagImpl;
@@ -23,7 +24,8 @@ import crdt.inner.types.RWSetImpl;
 	@Type(value = ItemsCRDT.class, name = "ItemsCRDT"),
 	@Type(value = PNCounterImpl.class, name = "PNCounter"),
 	@Type(value = AWSetImpl.class, name = "AWSet"),
-	@Type(value = RWSetImpl.class, name = "RWSet")
+	@Type(value = RWSetImpl.class, name = "RWSet"),
+	@Type(value = AWMapImpl.class, name = "AWMap")
 })
 public interface CRDT {
 	public boolean join(CRDT that);
@@ -31,5 +33,9 @@ public interface CRDT {
 	public CRDT clone(CausalContext cc);
 
 	public CRDT getDelta();
+	
+	public String innerToString();
+	
+	public CausalContext getCausalContext();
 	
 }

@@ -2,7 +2,6 @@ package crdt.inner.types;
 import java.util.Collection;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import crdt.api.CRDT;
@@ -10,52 +9,36 @@ import crdt.api.types.MVRegister;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.causal.Dot;
 import crdt.inner.causal.DotFun;
+import crdt.inner.types.abstr.DotFunCrdt;
+import crdt.inner.types.abstr.DotStoreCrdt;
 
-public class MVRegisterImpl<V> implements MVRegister<V>  {
-	@JsonProperty
-	private DotFun<V> dotMap;
-	@JsonIgnore
-	private CausalContext cc;
-	@JsonIgnore
-	private MVRegisterImpl<V> delta;
-	
-	public MVRegisterImpl(CausalContext cc, DotFun<V> dotMap){
-		this.dotMap = dotMap;
-		this.cc = cc;
+public class MVRegisterImpl<V> extends DotFunCrdt<V> implements MVRegister<V>  {
+	public MVRegisterImpl(CausalContext cc, DotFun<V> dotFun){
+		super(cc, dotFun);
 	}
 	
 	public MVRegisterImpl(CausalContext cc){
-		this(cc, new DotFun<>());
+		super(cc);
 	}
 	
 	@JsonCreator
-	public MVRegisterImpl(@JsonProperty("dotMap") DotFun<V> dotMap) {
-		this.dotMap = dotMap;
+	public MVRegisterImpl(@JsonProperty("dotFun") DotFun<V> dotFun) {
+		super(dotFun);
 	}
 	
-	private MVRegisterImpl<V> createAndMergeDelta(DotFun<V> newDotMap, CausalContext newCC) {
-		MVRegisterImpl<V> currentDelta =  new MVRegisterImpl<>(newCC, newDotMap);
-		if (delta != null) {
-			delta.join(currentDelta);
-		} else {
-			delta = currentDelta;
-		}
-		
-		return currentDelta;
-	}
 	
-	private MVRegisterImpl<V> writeDelta(V value){
+	private DotStoreCrdt writeDelta(V value){
 		Dot dot = cc.next();
-		DotFun<V> newDotMap = new DotFun<>(dot, value);
-		CausalContext newCC = new CausalContext(cc, dotMap.dots());
+		DotFun<V> newDotFun = new DotFun<>(dot, value);
+		CausalContext newCC = new CausalContext(cc, dots());
 		newCC.addDot(dot);
-		return createAndMergeDelta(newDotMap, newCC);
+		return createAndMergeDelta(newDotFun, newCC);
 	}
 	
-	private MVRegisterImpl<V> clearDelta(){
-		DotFun<V> newDotMap = new DotFun<>();
-		CausalContext newCC = new CausalContext(cc, newDotMap.dots());
-		return createAndMergeDelta(newDotMap, newCC);
+	private DotStoreCrdt clearDelta(){
+		DotFun<V> newDotFun = new DotFun<>();
+		CausalContext newCC = new CausalContext(cc, dots());
+		return createAndMergeDelta(newDotFun, newCC);
 	}
 	
 	public void write(V value){
@@ -68,13 +51,13 @@ public class MVRegisterImpl<V> implements MVRegister<V>  {
 
 	
 	public Collection<V> values(){
-		return dotMap.values();
+		return dotFun.values();
 	}
 	
 
 	@Override
 	public String toString() {
-		return "MVRegister [dotMap=" + dotMap + ", cc=" + cc + ", delta=" + delta + "]";
+		return values().toString();
 	}
 
 	@Override
@@ -84,22 +67,19 @@ public class MVRegisterImpl<V> implements MVRegister<V>  {
 		@SuppressWarnings("unchecked")
 		MVRegisterImpl<V> thatReg = (MVRegisterImpl<V>)that;
 	
-		if (dotMap.join(thatReg.dotMap, cc, thatReg.cc)){
-			cc.join(thatReg.cc);
-			return true;
-		}
-		return false;
+		return join(thatReg);
+	}
+
+	
+
+	@Override
+	protected DotFunCrdt<V> createCRDT(DotFun<V> newDotfun, CausalContext cc) {
+		return new MVRegisterImpl<>(cc, newDotfun);
 	}
 
 	@Override
-	public MVRegisterImpl<V> clone(CausalContext cc) {
-		return new MVRegisterImpl<V>(cc, dotMap.copy());
+	public String innerToString() {
+		return "MVRegisterImpl [cc=" + cc + ", dotFun=" + dotFun + ", delta=" + delta + "]";
 	}
 
-	@Override
-	public MVRegisterImpl<V> getDelta() {
-		return delta;
-	}
-	
-	
 }

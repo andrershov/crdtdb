@@ -44,8 +44,8 @@ public class ModelImpl implements Model {
 	}
 
 	@JsonIgnore
-	public CRDT getRoot() {
-		return crdt;
+	public <V extends CRDT> V getRoot() {
+		return (V)crdt;
 	}
 
 	public CrdtFactory factory() {
@@ -59,8 +59,8 @@ public class ModelImpl implements Model {
 	@JsonIgnore
 	public ModelImpl getDelta() {
 		ModelImpl m = new ModelImpl();
-		m.cc = cc;
 		m.crdt = crdt.getDelta();
+		m.cc = m.crdt.getCausalContext();
 		m.key = key;
 		return m;
 	}
@@ -75,11 +75,16 @@ public class ModelImpl implements Model {
 
 	@Override
 	public String toString() {
-		return "ModelImpl [crdt=" + crdt + ", cc=" + cc + ", key=" + key + "]";
+		return crdt.toString();
 	}
 
 	@Override
 	public String getKey() {
 		return key;
+	}
+
+	@Override
+	public String innerToString() {
+		return "ModelImpl [crdt=" + crdt.innerToString() + ", cc=" + cc + ", key=" + key + "]";
 	}
 }

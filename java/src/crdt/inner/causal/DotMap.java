@@ -26,10 +26,17 @@ public class DotMap<K> implements DotStore {
 	public DotMap() {
 		dotMap = new HashMap<>();
 	}
+	
+	public DotMap(DotMap<K> that){
+		this();
+		dotMap.putAll(that.dotMap);
+	}
 
 	public void put(K key, DotStore dotStore) {
 		dotMap.put(key, dotStore);
 	}
+	
+	
 
 	@SuppressWarnings("unchecked")
 	@Override

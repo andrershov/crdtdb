@@ -1,10 +1,12 @@
 package crdt.inner;
 
 import crdt.api.CrdtFactory;
+import crdt.api.types.AWMap;
 import crdt.api.types.AWSet;
 import crdt.api.types.PNCounter;
 import crdt.api.types.RWSet;
 import crdt.inner.causal.CausalContext;
+import crdt.inner.types.AWMapImpl;
 import crdt.inner.types.AWSetImpl;
 import crdt.inner.types.DWFlagImpl;
 import crdt.inner.types.EWFlagImpl;
@@ -37,13 +39,19 @@ public class CrdtFactoryImpl implements CrdtFactory {
 	}
 
 	@Override
-	public <E> AWSet<E> createAWSet() {
+	public <E> AWSetImpl<E> createAWSet() {
 		return new AWSetImpl<>(cc);
 	}
 
 	@Override
 	public <E> RWSet<E> createRWSet() {
-		return new RWSetImpl(cc);
+		return new RWSetImpl<>(cc);
 	}
+
+	@Override
+	public <K> AWMap<K> createAWMap() {
+		return new AWMapImpl<>(cc);
+	}
+
 
 }

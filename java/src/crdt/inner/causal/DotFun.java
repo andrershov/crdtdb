@@ -22,6 +22,11 @@ public class DotFun<V> implements DotStore {
 		dotFun = new HashMap<>();
 	}
 	
+	public DotFun(DotFun<V> that){
+		this();
+		dotFun.putAll(that.dotFun);
+	}
+	
 	public DotFun(Dot dot, V value){
 		this();
 		dotFun.put(dot, value);

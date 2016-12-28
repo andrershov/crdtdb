@@ -25,6 +25,12 @@ public class DotSet implements DotStore {
 		this();
 		dotSet.add(dot);
 	}
+	public DotSet(DotSet that) {
+		this();
+		dotSet.addAll(that.dotSet);
+	}
+
+
 	private Set<Dot> intersect(DotSet that){
 		return dotSet.stream().filter(dot->that.dotSet.contains(dot)).collect(Collectors.toSet());
 	}

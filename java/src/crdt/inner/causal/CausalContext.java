@@ -77,6 +77,10 @@ public class CausalContext {
 	public String toString() {
 		return "CausalContext [dotSet=" + dotSet + ", nodeId=" + nodeId + "]";
 	}
+	
+	public String getNodeId() {
+		return nodeId;
+	}
 
 	
 	public Optional<Dot> max() {

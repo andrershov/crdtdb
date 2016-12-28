@@ -24,7 +24,6 @@ public class DeltaStorage {
 
 		public ModelImpl getDeltaInterval(int startIndex) {
 			ModelImpl deltaInterval = null;
-			
 			for (int i = startIndex; i < newestDeltaCounter; i++) {
 				ModelImpl delta = storage.get(i);
 				if (deltaInterval == null) {
@@ -49,11 +48,10 @@ public class DeltaStorage {
 	public void store(ModelImpl delta) {
 		storages.compute(delta.getKey(), (k,v) -> {
 			if (v == null) {
-				return new Storage();
-			} else {
-				v.store(delta);
-				return v;
-			}
+				v = new Storage();
+			} 
+			v.store(delta);
+			return v;
 		});
 	}
 

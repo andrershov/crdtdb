@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import crdt.api.*;
+import crdt.api.types.AWMap;
 import crdt.api.types.AWSet;
 import crdt.api.types.DWFlag;
 import crdt.api.types.EWFlag;
@@ -9,8 +10,9 @@ import crdt.api.types.MVRegister;
 import crdt.api.types.PNCounter;
 import crdt.api.types.RWSet;
 import crdt.inner.CrdtDbImpl;
-import crdt.inner.DeltaStorage;
+import crdt.inner.ModelImpl;
 import crdt.inner.conn.LocalNodeJsonConnections;
+import crdt.inner.types.AWSetImpl;
 import crdt.inner.types.EWFlagImpl;
 import crdt.inner.types.ItemCRDT;
 import crdt.inner.types.ItemsCRDT;
@@ -27,9 +29,70 @@ public class Main {
 		//testCounter();
 		//testAWSet();
 		
-		testRWSet();
+		//testRWSet();
+		
+		testAWMap();
 	}
 	
+	private static void testAWMap() {
+		LocalNodeJsonConnections conn12 = new LocalNodeJsonConnections("node1", "node2");
+		CrdtDbImpl db1 = new CrdtDbImpl(conn12.getConn1());
+		CrdtDbImpl db2 = new CrdtDbImpl(conn12.getConn2());
+		
+		
+		ModelImpl modelA = db1.load("node1", "map");
+		AWMap<String> outterMap = modelA.factory().createAWMap();
+		modelA.setRoot(outterMap);
+		AWMap<String> innerMap = modelA.factory().createAWMap();
+		outterMap.put("map1", innerMap);
+		
+		AWSetImpl<String> set = modelA.factory().createAWSet();
+		set.add("el1");
+		innerMap.put("set", set);
+		db1.store(modelA);
+		
+		
+		Model modelB = db2.load("node2", "map");
+		System.out.println(modelB);
+		
+		AWMap<String> outterMapB = modelB.getRoot();
+		outterMapB.remove("map1");
+		System.out.println(modelB);
+		
+		
+		
+		modelA = db1.load("node1", "map");
+		outterMap = modelA.getRoot();
+		innerMap = outterMap.get("map1");
+		set = innerMap.get("set");
+		set.add("el2");
+		
+		
+		
+		db1.store(modelA);
+		db1.store(modelB);
+		
+		modelB = db1.load("node2", "map");
+		System.out.println(modelB);
+
+		
+	/*	MVRegisterImpl<String> regB = modelB.factory().createMVRegister();
+		regB.write("val2_1");
+		mapB.put("k1", regB);
+
+		System.out.println(mapB);	
+		
+		db1.store(modelA);
+		db1.store(modelB);
+
+		modelB = db1.load("node2", "map");
+		mapB = modelB.getRoot();
+		regB = mapB.get("k1");
+		System.out.println(regB.values());
+		
+		db1.store(modelA);*/
+	}
+
 	private static void testRWSet() {
 		LocalNodeJsonConnections conn12 = new LocalNodeJsonConnections("node1", "node2");
 		CrdtDbImpl db1 = new CrdtDbImpl(conn12.getConn1());
@@ -39,32 +102,33 @@ public class Main {
 		Model modelA = db1.load("node1", "reg");
 		RWSet<String> set = modelA.factory().createRWSet();
 		set.add("el1_1");
-	
+		set.add("el1_2");
 		System.out.println(set);
 		System.out.println(set.elements());
 		modelA.setRoot(set);
 		db1.store(modelA);
 		
-		conn12.breakConn();
-		
 		Model modelB = db2.load("node2", "reg");
 		RWSet<String> setB = (RWSet<String>) modelB.getRoot();
-		System.out.println(setB);
 		setB.remove("el1_1");
+		System.out.println(setB);
 		db2.store(modelB);
-		
 		
 		modelA = db1.load("node1", "reg");
 		set = (RWSet<String>) modelA.getRoot();
-		set.remove("el1_1");
+		System.out.println(set.elements());
+		
+	/*	modelA = db1.load("node1", "reg");
+		set = (RWSet<String>) modelA.getRoot();
 		set.add("el1_1");
+		set.add("el1_2");
 		db1.store(modelA);
 		
 		conn12.fixConn();
 		
 		modelB = db2.load("node2", "reg");
 		setB = (RWSet<String>) modelB.getRoot();
-		System.out.println(setB.elements());
+		System.out.println(setB.elements());*/
 	}
 
 	private static void testAWSet() throws InterruptedException {

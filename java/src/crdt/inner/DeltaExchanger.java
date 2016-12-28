@@ -34,7 +34,7 @@ public class DeltaExchanger {
 		
 		Integer newestAckCounter = ackMap.get(node.getName());
 		if (newestAckCounter == null || storage.getOldestDeltaCounter(key) > newestAckCounter){
-			ModelImpl model = db.load(null, "reg");
+			ModelImpl model = db.load(null, key);
 			if (model.getRoot() != null) {
 				node.send(model, newestDeltaCounter);
 			}

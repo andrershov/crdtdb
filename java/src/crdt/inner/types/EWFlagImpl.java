@@ -1,7 +1,6 @@
 package crdt.inner.types;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import crdt.api.CRDT;
@@ -9,43 +8,26 @@ import crdt.api.types.EWFlag;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.causal.Dot;
 import crdt.inner.causal.DotSet;
+import crdt.inner.types.abstr.DotSetCrdt;
 
-public class EWFlagImpl implements EWFlag  {
-	@JsonIgnore
-	private EWFlagImpl delta;
-	@JsonProperty("dotSet")
-	protected DotSet dotSet;
-	@JsonIgnore
-	protected CausalContext cc;
+public class EWFlagImpl extends DotSetCrdt implements EWFlag  {
 	
-	
-	private EWFlagImpl(CausalContext cc, DotSet dotSet){
-		this.cc = cc;
-		this.dotSet = dotSet;
+	protected EWFlagImpl(CausalContext cc, DotSet dotSet){
+		super(cc, dotSet);
 	}
 	
 	public EWFlagImpl(CausalContext cc){
-		this(cc, new DotSet());
+		super(cc);
 	}
 	
 	@JsonCreator
 	public EWFlagImpl(@JsonProperty("dotSet") DotSet dotSet){
-		this.dotSet = dotSet;
+		super(dotSet);
 	}
 	
 	
-	private EWFlagImpl createAndMergeDelta(DotSet newDotset, CausalContext newCC) {
-		EWFlagImpl currentDelta =  new EWFlagImpl(newCC, newDotset);
-		if (delta != null) {
-			delta.join(currentDelta);
-		} else {
-			delta = currentDelta;
-		}
-		
-		return currentDelta;
-	}
-	
-	private EWFlagImpl enableDelta(){
+
+	private DotSetCrdt enableDelta(){
 		Dot dot = cc.next();
 		DotSet newDotset = new DotSet(dot);
 		CausalContext newCC = new CausalContext(cc, dotSet.dots());
@@ -53,7 +35,7 @@ public class EWFlagImpl implements EWFlag  {
 		return createAndMergeDelta(newDotset, newCC);
 	}
 	
-	private EWFlagImpl disableDelta(){
+	private DotSetCrdt disableDelta(){
 		DotSet newDotset = new DotSet();
 		CausalContext newCC = new CausalContext(cc, dotSet.dots());
 		return createAndMergeDelta(newDotset, newCC);
@@ -61,13 +43,11 @@ public class EWFlagImpl implements EWFlag  {
 	
 	
 	public void enable(){
-		EWFlagImpl currentDelta = enableDelta();
-		this.join(currentDelta);
+		this.join(enableDelta());
 	}
 	
 	public void disable(){
-		EWFlagImpl currentDelta = disableDelta();
-		this.join(currentDelta);
+		this.join(disableDelta());
 	}
 	
 		
@@ -75,12 +55,8 @@ public class EWFlagImpl implements EWFlag  {
 		if (that == null) return false;
 		if (!(that instanceof EWFlagImpl)) throw new RuntimeException("CRDT types do not match");
 		EWFlagImpl thatFlag = (EWFlagImpl)that;
-	
-		if (dotSet.join(thatFlag.dotSet, cc, thatFlag.cc)){
-			cc.join(thatFlag.cc);
-			return true;
-		}
-		return false;
+		
+		return join(thatFlag);
 	}
 	
 	public boolean read(){
@@ -92,14 +68,22 @@ public class EWFlagImpl implements EWFlag  {
 		return new EWFlagImpl(cc, dotSet.copy());
 	}
 
-	@Override
-	@JsonIgnore
-	public EWFlagImpl getDelta() {
-		return delta;
-	}
+	
 
 	@Override
 	public String toString() {
+		return Boolean.toString(read());
+	}
+
+
+	@Override
+	public String innerToString() {
 		return "EWFlag [delta=" + delta + ", dotSet=" + dotSet + ", cc=" + cc + "]";
+	}
+
+	
+	@Override
+	protected DotSetCrdt createCRDT(DotSet dotSet, CausalContext cc) {
+		return new EWFlagImpl(cc, dotSet);
 	}
 }
