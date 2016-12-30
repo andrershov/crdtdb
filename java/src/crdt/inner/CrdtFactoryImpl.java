@@ -16,41 +16,43 @@ import crdt.inner.types.RWSetImpl;
 
 public class CrdtFactoryImpl implements CrdtFactory {
 	private CausalContext cc;
+	private String nodeId;
 
-	CrdtFactoryImpl(CausalContext cc) {
+	CrdtFactoryImpl(String nodeId, CausalContext cc) {
+		this.nodeId = nodeId;
 		this.cc = cc;
 	}
 	
 	public EWFlagImpl createEWFlag(){
-		return new EWFlagImpl(cc);
+		return new EWFlagImpl(nodeId, cc);
 	}
 
 	public <V> MVRegisterImpl<V> createMVRegister() {
-		return new MVRegisterImpl<V>(cc);
+		return new MVRegisterImpl<V>(nodeId, cc);
 	}
 
 	public DWFlagImpl createDWFlag() {
-		return new DWFlagImpl(cc);
+		return new DWFlagImpl(nodeId, cc);
 	}
 
 	@Override
 	public PNCounter createPNCounter() {
-		return new PNCounterImpl(cc);
+		return new PNCounterImpl(nodeId, cc);
 	}
 
 	@Override
 	public <E> AWSetImpl<E> createAWSet() {
-		return new AWSetImpl<>(cc);
+		return new AWSetImpl<>(nodeId, cc);
 	}
 
 	@Override
 	public <E> RWSet<E> createRWSet() {
-		return new RWSetImpl<>(cc);
+		return new RWSetImpl<>(nodeId, cc);
 	}
 
 	@Override
 	public <K> AWMap<K> createAWMap() {
-		return new AWMapImpl<>(cc);
+		return new AWMapImpl<>(nodeId, cc);
 	}
 
 

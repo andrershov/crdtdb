@@ -27,13 +27,20 @@ public class Main {
 		//testItems();
 		
 		//testCounter();
-		//testAWSet();
+		testAWSet();
 		
 		//testRWSet();
 		
-		testAWMap();
+		//testAWMap();
+		
+		//testEmptyReg();
 	}
 	
+	private static void testEmptyReg() {
+		// TODO Auto-generated method stub
+		
+	}
+
 	private static void testAWMap() {
 		LocalNodeJsonConnections conn12 = new LocalNodeJsonConnections("node1", "node2");
 		CrdtDbImpl db1 = new CrdtDbImpl(conn12.getConn1());
@@ -147,16 +154,15 @@ public class Main {
 		
 		Model model = db1.load("node1", "reg");
 		set = (AWSet<String>) model.getRoot();
+		
+		set.add("el1_2");
 		System.out.println(set);
-		set.remove("el1_1");
-		set.add("el1_1");
 		db1.store(model);
 		
 		
 		
 		Model modelB = db2.load("node2", "reg");
 		AWSet<String> setB = (AWSet<String>) modelB.getRoot();
-		System.out.println(setB);
 		setB.remove("el1_1");
 		db2.store(modelB);
 	

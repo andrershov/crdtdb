@@ -3,19 +3,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DotSet implements DotStore {
 	@JsonProperty("dotSet")
-	private Set<Dot> dotSet;
-	
-	@JsonCreator
-	public DotSet(@JsonProperty("dotSet") Set<Dot> dotSet){
-		this.dotSet = dotSet;
-	}
-	
+	public Set<Dot> dotSet;
 	
 	public DotSet(){
 		dotSet = new HashSet<>();
@@ -41,11 +34,14 @@ public class DotSet implements DotStore {
 	public Set<Dot> minus(CausalContext cc) {
 		Set<Dot> newSet = new HashSet<>();
 		newSet.addAll(dotSet);
-		newSet.removeAll(cc.dotSet);
+		newSet.removeAll(cc.getDotSet());
 		return newSet;
 	}
 	
 	public boolean join(DotStore thatStore, CausalContext thisContext, CausalContext thatContext){
+		if (!thatStore.getClass().equals(this.getClass())) {
+			throw new RuntimeException("Invalid type");
+		}
 		DotSet that = (DotSet)thatStore;
 		Set<Dot> newDotset = this.intersect(that);
 		newDotset.addAll(this.minus(thatContext));
@@ -71,7 +67,7 @@ public class DotSet implements DotStore {
 
 	@Override
 	public String toString() {
-		return "DotSet [dotSet=" + dotSet + "]";
+		return this.getClass().getSimpleName() +" [dotSet=" + dotSet + "]";
 	}
 
 	@Override

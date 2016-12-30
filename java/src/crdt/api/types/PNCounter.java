@@ -1,8 +1,8 @@
 package crdt.api.types;
 
-import crdt.api.CRDT;
+import crdt.api.Crdt;
 
-public interface PNCounter extends CRDT {
+public interface PNCounter extends Crdt {
 	public void increment(int count);
 	public void decrement(int count);
 	public void reset();

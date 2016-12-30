@@ -14,20 +14,19 @@ import crdt.inner.serializers.DotDeserializer;
 public class DotFun<V> implements DotStore {
 	@JsonProperty
 	@JsonDeserialize(keyUsing = DotDeserializer.class)
-	private Map<Dot, V> dotFun;
+	public Map<Dot, V> dotFun; //unfortunately custom key deserializer does not work in conjunction with @JsonCreator
 	
 	
-	
-	public DotFun(){
+	protected DotFun(){
 		dotFun = new HashMap<>();
 	}
-	
-	public DotFun(DotFun<V> that){
-		this();
+
+	protected DotFun(DotFun<V> that) {
+		dotFun = new HashMap<>();
 		dotFun.putAll(that.dotFun);
 	}
 	
-	public DotFun(Dot dot, V value){
+	protected DotFun(Dot dot, V value){
 		this();
 		dotFun.put(dot, value);
 	}
@@ -62,7 +61,7 @@ public class DotFun<V> implements DotStore {
 	public Map<Dot, V> minus(CausalContext cc) {
 		Map<Dot, V> map = new HashMap<>();
 		map.putAll(this.dotFun);
-		map.keySet().removeAll(cc.dotSet);
+		map.keySet().removeAll(cc.getDotSet());
 		return map;
 	}
 	
@@ -72,6 +71,9 @@ public class DotFun<V> implements DotStore {
 	
 	@SuppressWarnings("unchecked")
 	public boolean join(DotStore thatDotStore, CausalContext thisContext, CausalContext thatContext){
+		if (!thatDotStore.getClass().equals(this.getClass())) {
+			throw new RuntimeException("Invalid type");
+		}
 		DotFun<V> that = (DotFun<V>)thatDotStore;
 		Map<Dot, V> newDotFun = this.intersect(that);
 		newDotFun.putAll(this.minus(thatContext));
@@ -99,7 +101,7 @@ public class DotFun<V> implements DotStore {
 
 	@Override
 	public String toString() {
-		return "DotMap [dotMap=" + dotFun + "]";
+		return this.getClass().getSimpleName() + " [dotFun=" + dotFun + "]";
 	}
 
 	public V get(Dot dot) {

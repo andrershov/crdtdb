@@ -3,16 +3,16 @@ package crdt.inner.messages;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import crdt.inner.ModelImpl;
+import crdt.inner.ModelState;
 
 public class DeltaMessage implements CrdtMessage {
 	@JsonProperty("counter")
 	public int counter;
 	@JsonProperty("deltaInterval")
-	public ModelImpl deltaInterval;
+	public ModelState deltaInterval;
 
 	@JsonCreator
-	public DeltaMessage(@JsonProperty("deltaInterval") ModelImpl deltaInterval, @JsonProperty("counter") int counter) {
+	public DeltaMessage(@JsonProperty("deltaInterval") ModelState deltaInterval, @JsonProperty("counter") int counter) {
 		this.deltaInterval = deltaInterval;
 		this.counter = counter;
 	}

@@ -1,10 +1,9 @@
 package crdt.api.types;
 
-import crdt.api.CRDT;
-import crdt.inner.types.abstr.DotStoreCrdt;
+import crdt.api.Crdt;
 
-public interface AWMap<K> extends CRDT, DotStoreCrdt {
-	<V extends DotStoreCrdt> V get(K key);
-	<V extends DotStoreCrdt> void put(K key, V value);
+public interface AWMap<K> extends Crdt {
+	<V extends Crdt> V get(K key);
+	<V extends Crdt> void put(K key, V value);
 	void remove(K key);
 }

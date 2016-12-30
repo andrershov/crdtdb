@@ -4,58 +4,36 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class CausalContext {
-	@JsonProperty
-	Set<Dot> dotSet;
-	@JsonIgnore
-	String nodeId;
+	private Set<Dot> dotSet;
 	
-	public CausalContext(CausalContext that, Set<Dot> dots) {
-		this.dotSet = dots;
-		this.nodeId = that.nodeId;
-	}
-	
-	private CausalContext(){
-		
-	}
-		
-	public static CausalContext fromScratch(String nodeId){
-		CausalContext cc = new CausalContext();
-		cc.dotSet = new HashSet<>();
-		cc.nodeId = nodeId;
-		return cc;
+	public CausalContext(){
+		this.dotSet = new HashSet<>();
 	}
 	
 	@JsonCreator
-	public static CausalContext fromMap(@JsonProperty("dotSet") Set<Dot> dotSet){
-		CausalContext cc = new CausalContext();
-		cc.dotSet = dotSet;
-		return cc;
+	public CausalContext(@JsonProperty("dotSet") Set<Dot> dots) {
+		this.dotSet = dots;
 	}
 	
-	public static CausalContext fromExisting(CausalContext that){
-		CausalContext cc = new CausalContext();
-		cc.nodeId = that.nodeId;
-		cc.dotSet = new HashSet<>(that.dotSet);
-		return cc;
+	public CausalContext(Set<Dot> dots, Dot newDot){
+		this.dotSet = dots;
+		this.dotSet.add(newDot);
 	}
 	
-	public static CausalContext fromExistingAndNewNodeId(CausalContext that, String nodeId){
-		CausalContext cc = new CausalContext();
-		cc.nodeId = nodeId;
-		cc.dotSet = new HashSet<>(that.dotSet);
-		return cc;
+	public CausalContext(CausalContext that){
+		this.dotSet = new HashSet<>(that.dotSet);
 	}
-	
+
+
 	public boolean dotin(Dot dot) {
 		return dotSet.contains(dot);
 	}
 
-	public Dot next() {
-		Optional<Dot> maxDot = max();
+	public Dot next(String nodeId) {
+		Optional<Dot> maxDot = max(nodeId);
 		if (maxDot.isPresent()){
 			return new Dot(nodeId, maxDot.get().counter+1);
 		} else {
@@ -63,27 +41,24 @@ public class CausalContext {
 		}
 	}
 	
-	public void addDot(Dot dot) {
-		dotSet.add(dot);
+	@JsonProperty("dotSet")
+	public Set<Dot> getDotSet() {
+		return dotSet;
 	}
-
+	
+	
 
 	public void join(CausalContext that) {
 		this.dotSet.addAll(that.dotSet);
 	}
-
-
+	
+	
 	@Override
 	public String toString() {
-		return "CausalContext [dotSet=" + dotSet + ", nodeId=" + nodeId + "]";
-	}
-	
-	public String getNodeId() {
-		return nodeId;
+		return "CausalContext [dotSet=" + dotSet + "]";
 	}
 
-	
-	public Optional<Dot> max() {
+	public Optional<Dot> max(String nodeId) {
 		return dotSet.stream().filter(dot -> dot.nodeId.equals(nodeId)).reduce((acc, dot) -> dot.counter > acc.counter ? dot : acc);
 	}
 	

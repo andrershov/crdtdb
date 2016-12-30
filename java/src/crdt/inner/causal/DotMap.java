@@ -16,7 +16,7 @@ import crdt.inner.serializers.PrimitiveKeyDeserializer;
 public class DotMap<K> implements DotStore {
 	@JsonProperty("dotMap")
 	@JsonDeserialize(keyUsing = PrimitiveKeyDeserializer.class)
-	public Map<K, DotStore> dotMap;
+	public Map<K, DotStore> dotMap; //unfortunately custom key deserializer does not work in conjunction with @JsonCreator
 
 	public DotMap(K key, DotStore dotStore) {
 		this();
@@ -29,20 +29,22 @@ public class DotMap<K> implements DotStore {
 	
 	public DotMap(DotMap<K> that){
 		this();
-		dotMap.putAll(that.dotMap);
+		for (Entry<K, DotStore> entry :that.dotMap.entrySet()){
+			this.dotMap.put(entry.getKey(), entry.getValue().copy());
+		}
 	}
 
 	public void put(K key, DotStore dotStore) {
 		dotMap.put(key, dotStore);
 	}
 	
-	
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean join(DotStore that, CausalContext thisContext, CausalContext thatContext) {
-		if (!(that instanceof DotMap))
+		if (!that.getClass().equals(this.getClass())) {
 			throw new RuntimeException("Invalid type");
+		}
 		DotMap<K> thatDotMap = (DotMap<K>) that;
 
 		Set<K> keySet = new HashSet<>();
@@ -93,7 +95,7 @@ public class DotMap<K> implements DotStore {
 
 	@Override
 	public String toString() {
-		return "DotMap [dotMap=" + dotMap + "]";
+		return this.getClass().getSimpleName() + " [dotMap=" + dotMap + "]";
 	}
 
 	@Override
@@ -117,6 +119,7 @@ public class DotMap<K> implements DotStore {
 		}
 		return res;
 	}
+
 	
 	
 }

@@ -11,7 +11,7 @@ import crdt.inner.conn.NodeConnection;
 
 public class CrdtDbImpl implements CrdtDb {
 	
-	private ConcurrentHashMap<String, ModelImpl> map = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<String, ModelState> map = new ConcurrentHashMap<>();
 	private DeltaStorage deltaStorage = new DeltaStorage();
 	private DeltaExchanger deltaExchanger;
 	
@@ -26,27 +26,31 @@ public class CrdtDbImpl implements CrdtDb {
 		this(Collections.singletonList(node));
 	}
 	
+	public ModelState loadFullState(String key){
+		return map.get(key);
+	}
+	
 
 	public ModelImpl load(String nodeId, String key) {
-		ModelImpl model = map.get(key);
-		if (model == null) {
-			return ModelImpl.fromScratch(nodeId, key);
+		ModelState state = map.get(key);
+		if (state == null) {
+			return new ModelImpl(nodeId, key);
 		}
-		return ModelImpl.fromExistingAndNewNodeId(nodeId, model);
+		return new ModelImpl(nodeId, state);
 	}
 	
 	public void store(Model model) {
-		ModelImpl delta = ((ModelImpl)model).getDelta();
+		ModelState delta = ((ModelImpl)model).getDelta();
 		storeDelta(delta);
 	}
 
-	public void storeDelta(ModelImpl delta) {
+	public void storeDelta(ModelState delta) {
 		AtomicBoolean storeDelta = new AtomicBoolean(true);
 		map.compute(delta.getKey(), (ig, oldModel) -> {
 			if (oldModel == null) {
 				return delta;
 			} 
-			storeDelta.set(oldModel.joinDelta(delta));
+			storeDelta.set(oldModel.join(delta));
 			return oldModel;
 		});
 		if (storeDelta.get()){

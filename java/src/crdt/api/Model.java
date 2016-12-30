@@ -1,9 +1,7 @@
 package crdt.api;
 
 public interface Model {
-	<V extends CRDT> V getRoot();
-	void setRoot(CRDT root);
-	String getKey();
+	<V extends Crdt> V getRoot();
+	void setRoot(Crdt root);
 	CrdtFactory factory();
-	String innerToString();
 }

@@ -1,13 +1,13 @@
 package crdt.inner.conn;
 
 import crdt.inner.DeltaExchanger;
-import crdt.inner.ModelImpl;
+import crdt.inner.ModelState;
 
 public interface NodeConnection {
 
 	String getName();
 
-	void send(ModelImpl deltaInterval, int counter);
+	void send(ModelState deltaInterval, int counter);
 
 	void setDeltaExchanger(DeltaExchanger deltaExchanger);
 

@@ -12,24 +12,24 @@ public class DeltaStorage {
 	private Map<String, Storage> storages = new ConcurrentHashMap<>();
 	
 	private static class Storage {
-		private List<ModelImpl> storage = new ArrayList<>();
+		private List<ModelState> storage = new ArrayList<>();
 		private int newestDeltaCounter = 0;
 		private int oldestDeltaCounter = 0;
 
 		
-		public void store(ModelImpl delta) {
+		public void store(ModelState delta) {
 			newestDeltaCounter++;
 			storage.add(delta);
 		}
 
-		public ModelImpl getDeltaInterval(int startIndex) {
-			ModelImpl deltaInterval = null;
+		public ModelState getDeltaInterval(int startIndex) {
+			ModelState deltaInterval = null;
 			for (int i = startIndex; i < newestDeltaCounter; i++) {
-				ModelImpl delta = storage.get(i);
+				ModelState delta = storage.get(i);
 				if (deltaInterval == null) {
 					deltaInterval = delta;
 				} else {
-					deltaInterval.joinDelta(delta);
+					deltaInterval.join(delta);
 				}
 			}
 			return deltaInterval;
@@ -45,7 +45,7 @@ public class DeltaStorage {
 	}
 
 	
-	public void store(ModelImpl delta) {
+	public void store(ModelState delta) {
 		storages.compute(delta.getKey(), (k,v) -> {
 			if (v == null) {
 				v = new Storage();
@@ -55,7 +55,7 @@ public class DeltaStorage {
 		});
 	}
 
-	public ModelImpl getDeltaInterval(String key, int startIndex) {
+	public ModelState getDeltaInterval(String key, int startIndex) {
 		return storages.get(key).getDeltaInterval(startIndex);
 	}
 

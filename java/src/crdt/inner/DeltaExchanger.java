@@ -34,19 +34,17 @@ public class DeltaExchanger {
 		
 		Integer newestAckCounter = ackMap.get(node.getName());
 		if (newestAckCounter == null || storage.getOldestDeltaCounter(key) > newestAckCounter){
-			ModelImpl model = db.load(null, key);
-			if (model.getRoot() != null) {
-				node.send(model, newestDeltaCounter);
-			}
+			ModelState state = db.loadFullState(key);
+			node.send(state, newestDeltaCounter);
 		} else {
-			ModelImpl deltaInterval = storage.getDeltaInterval(key, newestAckCounter);
+			ModelState deltaInterval = storage.getDeltaInterval(key, newestAckCounter);
 			if (deltaInterval != null) {
 				node.send(deltaInterval, newestDeltaCounter);
 			}
 		}
 	}
 	
-	public synchronized void  onReceive(NodeConnection node, ModelImpl deltaInterval, int counter) {
+	public synchronized void  onReceive(NodeConnection node, ModelState deltaInterval, int counter) {
 		db.storeDelta(deltaInterval);
 		node.sendAck(deltaInterval.getKey(), counter);
 	}

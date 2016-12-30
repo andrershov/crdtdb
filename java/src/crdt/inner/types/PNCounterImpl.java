@@ -1,115 +1,67 @@
 package crdt.inner.types;
 
 import java.util.HashSet;
+import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import crdt.api.CRDT;
 import crdt.api.types.PNCounter;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.causal.Dot;
-import crdt.inner.causal.DotFun;
-import crdt.inner.causal.DotMap;
-import crdt.inner.types.abstr.DotFunCrdt;
-import crdt.inner.types.abstr.DotMapCrdt;
 
-public class PNCounterImpl extends DotFunCrdt<Pair> implements PNCounter {
-	protected PNCounterImpl(CausalContext cc, DotFun<Pair> dotFun) {
-		super(cc, dotFun);
+public class PNCounterImpl extends CrdtBase<PNCounterState> implements PNCounter {
+	public PNCounterImpl(String nodeId, CausalContext cc){
+		super(nodeId, new PNCounterState(), cc);
 	}
 	
-	public PNCounterImpl(CausalContext cc) {
-		super(cc);
+	public PNCounterImpl(String nodeId, PNCounterState state, CausalContext cc){
+		super(nodeId, state, cc);
 	}
 
-	
-	@JsonCreator
-	public PNCounterImpl(@JsonProperty("dotFun") DotFun<Pair> dotFun) {
-		super(dotFun);
-	}
-
-	
-	private DotFunCrdt<Pair> incrementDelta(int count) {
-		return updateDelta(Pair.inc(count));
-	}
-	
-	private DotFunCrdt<Pair> decrementDelta(int count) {
-		return updateDelta(Pair.dec(count));
-	}
-	
-	
-	private DotFunCrdt<Pair> updateDelta(Pair updatePair) {
-		Dot dot = cc.max().orElse(cc.next());
-		Pair p = dotFun.get(dot);
-		DotFun<Pair> newDotMap;
-		CausalContext newCC;
-		if (p != null) {
+	private void update(Pair updatePair) {
+		Optional<Dot> dot = cc.max(nodeId);
+		Pair p;
+		PNCounterState currentStateDelta;
+		CausalContext currentCCDelta;
+		if (dot.isPresent() && (p = state.get(dot.get())) != null) {
 			Pair newPair = p.add(updatePair);
-			newDotMap = new DotFun<>(dot, newPair);
-			newCC = new CausalContext(cc, newDotMap.dots());
-			return createAndMergeDelta(newDotMap, cc);
+			currentStateDelta = new PNCounterState(dot.get(), newPair);
+			currentCCDelta = new CausalContext(state.dots());
 		} else {
-			dot = cc.next();
-			newDotMap = new DotFun<Pair>(dot, updatePair);
+			Dot newDot = cc.next(nodeId);
+			currentStateDelta = new PNCounterState(newDot, updatePair);
 			HashSet<Dot> dots = new HashSet<>();
-			dots.add(dot);
-			newCC = new CausalContext(cc, dots);
-			return createAndMergeDelta(newDotMap, newCC);
+			dots.add(newDot);
+			currentCCDelta = new CausalContext(dots);
 		}
+		joinDelta(currentStateDelta, currentCCDelta);
 	}
 
 	public void increment(int count){
-		this.join(incrementDelta(count));
-	}
-
-	@Override
-	public boolean join(CRDT that) {
-		if (that == null) return false;
-		if (!(that instanceof PNCounterImpl)) throw new RuntimeException("CRDT types do not match");
-		PNCounterImpl thatCounter = (PNCounterImpl)that;
-		
-		return join(thatCounter);
+		update(Pair.inc(count));
 	}
 
 	@Override
 	public void decrement(int count) {
-		this.join(decrementDelta(count));
+		update(Pair.dec(count));
 	}
 
 	@Override
 	public void reset() {
-		this.join(resetDelta());
+		stateDelta = new PNCounterState();
+		ccDelta = new CausalContext(cc);
 		
-	}
-
-	private DotFunCrdt<Pair> resetDelta() {
-		return createAndMergeDelta(new DotFun<>(), cc);
 	}
 
 	@Override
 	public int value() {
 		int sum = 0;
-		for (Pair p: dotFun.values()){
+		for (Pair p: state.dotFun.values()){
 			sum=sum+p.inc-p.dec;
 		}
 		return sum;
 	}
 	
-	
-	@Override
-	public String innerToString() {
-		return "PNCounterImpl [dotFun=" + dotFun + ", cc=" + cc + ", delta=" + delta + "]";
-	}
-
 	@Override
 	public String toString() {
 		return Integer.toString(value());
-	}
-
-	@Override
-	protected DotFunCrdt<Pair> createCRDT(DotFun<Pair> newDotfun, CausalContext cc) {
-		return new PNCounterImpl(cc, newDotfun);
 	}
 }

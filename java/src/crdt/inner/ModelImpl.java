@@ -1,90 +1,47 @@
 package crdt.inner;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
-import crdt.api.CRDT;
+import crdt.api.Crdt;
 import crdt.api.CrdtFactory;
 import crdt.api.Model;
 import crdt.inner.causal.CausalContext;
 
 public class ModelImpl implements Model {
-	@JsonProperty
-	private CRDT crdt;
-	@JsonProperty
+	private Crdt root;
 	private CausalContext cc;
-	@JsonProperty
 	private String key;
-
-	private ModelImpl() {
+	private String nodeId;
+	
+	
+	public ModelImpl(String nodeId, ModelState state){
+		this.key = state.getKey();
+		this.nodeId = nodeId;
+		this.cc = new CausalContext(state.getCc());
+		this.root = state.getCrdtState().createCrdt(nodeId, cc);
 	}
-
-	@JsonCreator
-	public static ModelImpl fromCCandCrdt(@JsonProperty("cc") CausalContext cc, @JsonProperty("crdt") CRDT crdt) {
-		ModelImpl m = new ModelImpl();
-		m.crdt = crdt.clone(cc);
-		m.cc = cc;
-		return m;
+	
+	public ModelImpl(String nodeId, String key){
+		this.cc = new CausalContext();
+		this.key = key;
+		this.nodeId = nodeId;
 	}
+	
 
-	public static ModelImpl fromScratch(String nodeId, String key) {
-		ModelImpl m = new ModelImpl();
-		m.cc = CausalContext.fromScratch(nodeId);
-		m.key = key;
-		return m;
-	}
-
-	public static ModelImpl fromExistingAndNewNodeId(String nodeId, ModelImpl that) {
-		ModelImpl m = new ModelImpl();
-		m.key = that.key;
-		m.cc = CausalContext.fromExistingAndNewNodeId(that.cc, nodeId);
-		m.crdt = that.getRoot().clone(m.cc);
-		return m;
+	public ModelState getDelta(){
+		return new ModelState(key, root.getDelta(), root.getCausalContextDelta());
 	}
 
 	@JsonIgnore
-	public <V extends CRDT> V getRoot() {
-		return (V)crdt;
+	public <V extends Crdt> V getRoot() {
+		return (V)root;
 	}
 
 	public CrdtFactory factory() {
-		return new CrdtFactoryImpl(cc);
+		return new CrdtFactoryImpl(nodeId, cc);
 	}
 
-	public void setRoot(CRDT crdt) {
-		this.crdt = crdt;
-	}
-
-	@JsonIgnore
-	public ModelImpl getDelta() {
-		ModelImpl m = new ModelImpl();
-		m.crdt = crdt.getDelta();
-		m.cc = m.crdt.getCausalContext();
-		m.key = key;
-		return m;
-	}
-
-	public boolean joinDelta(ModelImpl delta) {
-		if (crdt.join(delta.getRoot())) {
-			cc.join(delta.cc);
-			return true;
-		}
-		return false;
-	}
-
-	@Override
-	public String toString() {
-		return crdt.toString();
-	}
-
-	@Override
-	public String getKey() {
-		return key;
-	}
-
-	@Override
-	public String innerToString() {
-		return "ModelImpl [crdt=" + crdt.innerToString() + ", cc=" + cc + ", key=" + key + "]";
+	public void setRoot(Crdt root) {
+		this.root = root;
 	}
 }

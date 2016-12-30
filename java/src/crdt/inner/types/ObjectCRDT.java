@@ -7,10 +7,10 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import crdt.api.CRDT;
+import crdt.api.Crdt;
 import crdt.inner.causal.CausalContext;
 
-public abstract class ObjectCRDT<T extends ObjectCRDT<T>> implements CRDT {
+public abstract class ObjectCRDT<T extends ObjectCRDT<T>> implements Crdt {
 	private Constructor<T> constructor;
 	private List<Field> crdtFields = new ArrayList<>();
 
@@ -20,7 +20,7 @@ public abstract class ObjectCRDT<T extends ObjectCRDT<T>> implements CRDT {
 			Class<T> clazz = (Class<T>) this.getClass();
 			constructor = clazz.getDeclaredConstructor();
 			for (Field field : clazz.getDeclaredFields()) {
-				if (CRDT.class.isAssignableFrom(field.getType())) {
+				if (Crdt.class.isAssignableFrom(field.getType())) {
 					crdtFields.add(field);
 				}
 			}
@@ -30,7 +30,7 @@ public abstract class ObjectCRDT<T extends ObjectCRDT<T>> implements CRDT {
 	}
 
 	@Override
-	public boolean join(CRDT that) {
+	public boolean join(Crdt that) {
 		if (that == null)
 			return false;
 		if (this.getClass() != that.getClass())
@@ -40,10 +40,10 @@ public abstract class ObjectCRDT<T extends ObjectCRDT<T>> implements CRDT {
 		try {
 
 			for (Field field : crdtFields) {
-				CRDT thisCRDT;
-				thisCRDT = (CRDT) field.get(this);
+				Crdt thisCRDT;
+				thisCRDT = (Crdt) field.get(this);
 
-				CRDT thatCRDT = (CRDT) field.get(that);
+				Crdt thatCRDT = (Crdt) field.get(that);
 
 				if (thatCRDT != null) {
 					if (thisCRDT == null) {
@@ -61,11 +61,11 @@ public abstract class ObjectCRDT<T extends ObjectCRDT<T>> implements CRDT {
 	}
 
 	@Override
-	public CRDT clone(CausalContext cc) {
+	public Crdt clone(CausalContext cc) {
 		try {
 			T that = constructor.newInstance();
 			for (Field field : crdtFields) {
-				CRDT val = (CRDT) field.get(this);
+				Crdt val = (Crdt) field.get(this);
 				if (val != null) {
 					field.set(that, val.clone(cc));
 				}
@@ -78,12 +78,12 @@ public abstract class ObjectCRDT<T extends ObjectCRDT<T>> implements CRDT {
 
 	@Override
 	@JsonIgnore
-	public CRDT getDelta() {
+	public Crdt getDelta() {
 		try {
 			T that = constructor.newInstance();
 			boolean changed = false;
 			for (Field field : crdtFields) {
-				CRDT val = (CRDT) field.get(this);
+				Crdt val = (Crdt) field.get(this);
 				changed |= (val != null && val.getDelta() != null);
 				if (val != null) {
 					field.set(that, val.getDelta());

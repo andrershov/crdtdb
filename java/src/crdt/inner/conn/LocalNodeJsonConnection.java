@@ -2,6 +2,7 @@ package crdt.inner.conn;
 
 import crdt.inner.DeltaExchanger;
 import crdt.inner.ModelImpl;
+import crdt.inner.ModelState;
 import crdt.inner.messages.AckMessage;
 import crdt.inner.messages.CrdtMessage;
 import crdt.inner.messages.DeltaMessage;
@@ -35,7 +36,7 @@ public class LocalNodeJsonConnection implements NodeConnection {
 	 * @see crdt.inner.conn.NodeConnection#send(crdt.inner.ModelImpl, int)
 	 */
 	@Override
-	public void send(ModelImpl deltaInterval, int counter) {
+	public void send(ModelState deltaInterval, int counter) {
 		if (broken) return;
 		String msg = serializer.serialize(new DeltaMessage(deltaInterval, counter));
 		System.out.println("Sending delta "+nodeId+" msg: "+msg);
