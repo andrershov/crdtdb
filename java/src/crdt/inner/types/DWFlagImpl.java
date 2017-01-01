@@ -1,10 +1,11 @@
 package crdt.inner.types;
 
+import crdt.api.types.DWFlag;
 import crdt.api.types.EWFlag;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.causal.Dot;
 
-public class DWFlagImpl extends CrdtBase<DWFlagState> implements EWFlag  {
+public class DWFlagImpl extends CrdtBase<DWFlagState> implements DWFlag  {
 	
 	public DWFlagImpl(String nodeId, DWFlagState state, CausalContext cc){
 		super(nodeId, state, cc);

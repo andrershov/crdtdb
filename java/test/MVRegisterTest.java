@@ -1,54 +1,16 @@
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Before;
 import org.junit.Test;
 
-import crdt.api.CrdtDb;
 import crdt.api.Model;
 import crdt.api.types.MVRegister;
-import crdt.inner.CrdtDbImpl;
 
-public class MVRegisterTest {
-
-	private CrdtDb db1;
-	private Model modelA;
-	private Model modelB;
-	
-	
-	@Before
-	public void setUp(){
-		db1 = new CrdtDbImpl();
-	}
-	
-	private MVRegister<String> createRegisterA(){
-		modelA = db1.load("nodeA", "reg1");
-		MVRegister<String> reg = modelA.factory().createMVRegister();
-		modelA.setRoot(reg);
-		return reg;
-	}
-	
-	private MVRegister<String> createRegisterB(){
-		modelB = db1.load("nodeB", "reg1");
-		MVRegister<String> reg = modelB.factory().createMVRegister();
-		modelB.setRoot(reg);
-		return reg;
-	}
-	
-	private MVRegister<String> loadRegisterA() {
-		modelA = db1.load("nodeA", "reg1");
-		return modelA.getRoot();
-	}
-	
-	private MVRegister<String> loadRegisterB() {
-		modelB = db1.load("nodeB", "reg1");
-		return modelB.getRoot();
-	}
-	
+public class MVRegisterTest extends TestBase<MVRegister<String>> {
 	private static void assertRegisterValues(MVRegister<String> reg, String... expectedValues){
 		Set<String> regVal = new HashSet<>(reg.values());
 		Set<String> expectedVal = new HashSet<String>(Arrays.asList(expectedValues));
@@ -58,59 +20,68 @@ public class MVRegisterTest {
 
 	@Test
 	public void testSingleWrite() {
-		MVRegister<String> reg = createRegisterA();
-		reg.write("val");
-		assertRegisterValues(reg, "val");
+		Model m = createCrdt(db1, NODE_A);
+		root(m).write("val");
+		assertRegisterValues(root(m), "val");
 	}
 	
 	@Test
 	public void testSingleWriteAndStore(){
-		MVRegister<String> reg = createRegisterA();
-		reg.write("val");
-		db1.store(modelA);
+		Model m = createCrdt(db1, NODE_A);
+		root(m).write("val");
+		db1.store(m);
 		
-		reg = loadRegisterA();
-		assertRegisterValues(reg, "val");
+		m = loadCrdt(db1, NODE_A);
+		assertRegisterValues(root(m), "val");
 	}
 	
 	@Test
 	public void testOverride(){
-		MVRegister<String> reg = createRegisterA();
-		reg.write("val1");
-		db1.store(modelA);
+		Model m = createCrdt(db1, NODE_A);
+		root(m).write("val1");
+		db1.store(m);
 		
-		reg = loadRegisterA();
-		reg.write("val2");
-		assertRegisterValues(reg, "val2");
+		m = loadCrdt(db1, NODE_A);
+		root(m).write("val2");
+		assertRegisterValues(root(m), "val2");
 	}
 	
 	@Test
 	public void testConcurrentCreate(){
-		MVRegister<String> regA = createRegisterA();
-		regA.write("valA");
-		MVRegister<String> regB = createRegisterB();
-		regB.write("valB");
-		db1.store(modelA);
-		db1.store(modelB);
-		regA = loadRegisterA();
-		assertRegisterValues(regA, "valA", "valB");
+		Model mA = createCrdt(db1, NODE_A);
+		root(mA).write("valA");
+		Model mB = createCrdt(db1, NODE_B);
+		root(mB).write("valB");
+		db1.store(mA);
+		db1.store(mB);
+		mA = loadCrdt(db1, NODE_A);
+		assertRegisterValues(root(mA), "valA", "valB");
 	}
 	
 	@Test
 	public void testConcurrentCreateAndOverride(){
 		testConcurrentCreate();
-		MVRegister<String> regA = loadRegisterA();
-		regA.write("newValue");
-		db1.store(modelA);
+		Model mA = loadCrdt(db1, NODE_A);
+		root(mA).write("newValue");
+		db1.store(mA);
 		
-		regA = loadRegisterA();
-		assertRegisterValues(regA, "newValue");
+		mA = loadCrdt(db1, NODE_A);
+		assertRegisterValues(root(mA), "newValue");
 	}
 	
-	
+	@Test
+	public void testReplication(){
+		conns.fixConn();
+		Model mA = createCrdt(db1, NODE_A);
+		root(mA).write("val");
+		db1.store(mA);
+		Model mB = loadCrdt(db2, NODE_B);
+		assertRegisterValues(root(mB), "val");
+	}
 
-	
-	
-	
 
+	@Override
+	protected MVRegister<String> createCrdt(Model model) {
+		return model.factory().createMVRegister();
+	}
 }

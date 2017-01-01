@@ -1,10 +1,11 @@
 package crdt.inner;
 
+import java.util.Set;
+
 import crdt.api.CrdtFactory;
 import crdt.api.types.AWMap;
 import crdt.api.types.AWSet;
 import crdt.api.types.PNCounter;
-import crdt.api.types.RWSet;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.types.AWMapImpl;
 import crdt.inner.types.AWSetImpl;
@@ -46,7 +47,7 @@ public class CrdtFactoryImpl implements CrdtFactory {
 	}
 
 	@Override
-	public <E> RWSet<E> createRWSet() {
+	public <E> RWSetImpl<E> createRWSet() {
 		return new RWSetImpl<>(nodeId, cc);
 	}
 
