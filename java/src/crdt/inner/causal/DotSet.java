@@ -18,11 +18,6 @@ public class DotSet implements DotStore {
 		this();
 		dotSet.add(dot);
 	}
-	public DotSet(DotSet that) {
-		this();
-		dotSet.addAll(that.dotSet);
-	}
-
 
 	private Set<Dot> intersect(DotSet that){
 		return dotSet.stream().filter(dot->that.dotSet.contains(dot)).collect(Collectors.toSet());
@@ -54,7 +49,7 @@ public class DotSet implements DotStore {
 	
 	@Override
 	public DotSet copy() {
-		DotSet that = new DotSet();
+		DotSet that = createEmpty();
 		that.dotSet.addAll(this.dotSet);
 		return that;
 	}
@@ -97,7 +92,7 @@ public class DotSet implements DotStore {
 
 
 	@Override
-	public DotStore createEmpty() {
+	public DotSet createEmpty() {
 		return new DotSet();
 	}
 

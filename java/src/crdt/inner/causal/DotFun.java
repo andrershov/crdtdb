@@ -21,10 +21,6 @@ public class DotFun<V> implements DotStore {
 		dotFun = new HashMap<>();
 	}
 
-	protected DotFun(DotFun<V> that) {
-		dotFun = new HashMap<>();
-		dotFun.putAll(that.dotFun);
-	}
 	
 	protected DotFun(Dot dot, V value){
 		this();
@@ -85,7 +81,7 @@ public class DotFun<V> implements DotStore {
 	
 	@Override
 	public DotFun<V> copy() {
-		DotFun<V> that = new DotFun<>();
+		DotFun<V> that = createEmpty();
 		that.dotFun.putAll(this.dotFun);
 		return that;
 	}
@@ -109,7 +105,7 @@ public class DotFun<V> implements DotStore {
 	}
 
 	@Override
-	public DotStore createEmpty() {
+	public DotFun<V> createEmpty() {
 		return new DotFun<>();
 	}
 

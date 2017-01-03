@@ -1,22 +1,10 @@
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.junit.Test;
 
 import crdt.api.Model;
 import crdt.api.types.MVRegister;
 
 public class MVRegisterTest extends TestBase<MVRegister<String>> {
-	private static void assertRegisterValues(MVRegister<String> reg, String... expectedValues){
-		Set<String> regVal = new HashSet<>(reg.values());
-		Set<String> expectedVal = new HashSet<String>(Arrays.asList(expectedValues));
-		assertEquals(expectedVal, regVal);
-	}
-	
 
 	@Test
 	public void testSingleWrite() {

@@ -12,17 +12,18 @@ public class MVRegisterState<V> extends DotFun<V> implements CrdtState {
 		super();
 	}
 	
-	public MVRegisterState(Dot dot, V value) {
+	public MVRegisterState(Dot dot, V value){
 		super(dot, value);
-	}
-	
-	public MVRegisterState(MVRegisterState<V> that){
-		super(that);
 	}
 	
 	
 	@Override
 	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new MVRegisterImpl<>(nodeId, new MVRegisterState<>(this), cc);
+		return new MVRegisterImpl<>(nodeId, (MVRegisterState<V>)this.copy(), cc);
+	}
+	
+	@Override
+	public DotFun<V> createEmpty() {
+		return new MVRegisterState<>();
 	}
 }

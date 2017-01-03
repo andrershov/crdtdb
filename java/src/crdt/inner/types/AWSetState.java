@@ -15,13 +15,15 @@ public class AWSetState<V> extends DotMap<V> implements CrdtState {
 		super(value, dotStore);
 	}
 	
-	public AWSetState(AWSetState<V> that){
-		super(that);
-	}
 	
 	@Override
 	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new AWSetImpl<>(nodeId, new AWSetState<>(this), cc);
+		return new AWSetImpl<>(nodeId, (AWSetState<V>)this.copy(), cc);
+	}
+	
+	@Override
+	public DotMap<V> createEmpty() {
+		return new AWSetState<>();
 	}
 
 }

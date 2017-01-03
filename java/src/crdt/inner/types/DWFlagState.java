@@ -16,13 +16,15 @@ public class DWFlagState extends DotSet implements CrdtState {
 		super();
 	}
 
-	public DWFlagState(DWFlagState that) {
-		super(that);
-	}
-
+	
 	@Override
 	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new DWFlagImpl(nodeId, new DWFlagState(this), cc);
+		return new DWFlagImpl(nodeId, (DWFlagState)this.copy(), cc);
+	}
+	
+	@Override
+	public DotSet createEmpty() {
+		return new DWFlagState();
 	}
 
 }

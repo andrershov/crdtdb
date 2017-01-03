@@ -10,6 +10,8 @@ import crdt.api.types.AWMap;
 import crdt.inner.CrdtState;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.causal.Dot;
+import crdt.inner.causal.DotStore;
+import crdt.inner.causal.EmptyDotStore;
 
 public class AWMapImpl<K> extends CrdtBase<AWMapState<K>> implements AWMap<K> {
 	private Map<K, Crdt> crdtsToScan = new HashMap<>();
@@ -31,8 +33,9 @@ public class AWMapImpl<K> extends CrdtBase<AWMapState<K>> implements AWMap<K> {
 		if ((crdt = crdtsToScan.get(key))!=null){
 			return (V) crdt;
 		}
-		CrdtState keyState = (CrdtState)state.get(key);
-		if (keyState == null) return null;
+		DotStore dotStore = state.get(key);
+		if (dotStore instanceof EmptyDotStore) return null;
+		CrdtState keyState = (CrdtState) dotStore;
 		crdt = keyState.createCrdt(nodeId, cc);
 		crdtsToScan.put(key, (V)crdt);
 		return (V) crdt;
@@ -57,8 +60,10 @@ public class AWMapImpl<K> extends CrdtBase<AWMapState<K>> implements AWMap<K> {
 		}
 		if (stateDelta == null){
 			stateDelta = modifyDeltas;
+			ccDelta = modifyCCdeltas;
 		} else {
 			stateDelta.join(modifyDeltas, ccDelta, modifyCCdeltas);
+			ccDelta.join(modifyCCdeltas);
 		}
 		
 		return stateDelta;
@@ -67,11 +72,15 @@ public class AWMapImpl<K> extends CrdtBase<AWMapState<K>> implements AWMap<K> {
 
 	@Override
 	public void remove(K key) {
-		//TODO what if crdt to scan is removed?
 		AWMapState<K> currentStateDelta = new AWMapState<>();
 		Set<Dot> dotSet = new HashSet<>();
-		if (state.get(key) != null) {
-			dotSet.addAll(state.get(key).dots());
+		DotStore store;
+		if ((store = state.get(key)) != null) {
+			dotSet.addAll(store.dots());
+		}
+		Crdt crdt;
+		if ((crdt = crdtsToScan.get(key)) != null){
+			dotSet.addAll(crdt.getState().dots());
 		}
 
 		CausalContext currentCCDelta = new CausalContext(dotSet);

@@ -1,8 +1,15 @@
+import static org.junit.Assert.assertEquals;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.Before;
 
 import crdt.api.Crdt;
 import crdt.api.CrdtDb;
 import crdt.api.Model;
+import crdt.api.types.MVRegister;
 import crdt.inner.CrdtDbImpl;
 import crdt.inner.conn.LocalNodeJsonConnections;
 
@@ -16,6 +23,12 @@ public abstract class TestBase<T extends Crdt> {
 
 	public TestBase() {
 		super();
+	}
+	
+	protected static void assertRegisterValues(MVRegister<String> reg, String... expectedValues){
+		Set<String> regVal = new HashSet<>(reg.values());
+		Set<String> expectedVal = new HashSet<String>(Arrays.asList(expectedValues));
+		assertEquals(expectedVal, regVal);
 	}
 
 	@Before

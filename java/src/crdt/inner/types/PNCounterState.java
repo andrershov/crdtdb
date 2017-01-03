@@ -16,12 +16,14 @@ public class PNCounterState extends DotFun<Pair> implements CrdtState {
 		super();
 	}
 
-	public PNCounterState(PNCounterState that) {
-		super(that);
-	}
 
 	@Override
 	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new PNCounterImpl(nodeId, new PNCounterState(this), cc);
+		return new PNCounterImpl(nodeId, (PNCounterState)this.copy(), cc);
+	}
+	
+	@Override
+	public DotFun<Pair> createEmpty() {
+		return new PNCounterState();
 	}
 }

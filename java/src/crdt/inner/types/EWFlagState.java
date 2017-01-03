@@ -16,13 +16,16 @@ public class EWFlagState extends DotSet implements CrdtState {
 		super();
 	}
 
-	public EWFlagState(EWFlagState that) {
-		super(that);
-	}
+
 
 	@Override
 	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new EWFlagImpl(nodeId, new EWFlagState(this), cc);
+		return new EWFlagImpl(nodeId, (EWFlagState)this.copy(), cc);
+	}
+	
+	@Override
+	public DotSet createEmpty() {
+		return new EWFlagState();
 	}
 
 }

@@ -27,13 +27,6 @@ public class DotMap<K> implements DotStore {
 		dotMap = new HashMap<>();
 	}
 	
-	public DotMap(DotMap<K> that){
-		this();
-		for (Entry<K, DotStore> entry :that.dotMap.entrySet()){
-			this.dotMap.put(entry.getKey(), entry.getValue().copy());
-		}
-	}
-
 	public void put(K key, DotStore dotStore) {
 		dotMap.put(key, dotStore);
 	}
@@ -86,7 +79,7 @@ public class DotMap<K> implements DotStore {
 	
 	@Override
 	public DotMap<K> copy() {
-		DotMap<K> that = new DotMap<>();
+		DotMap<K> that = createEmpty();
 		for (Entry<K, DotStore> entry :this.dotMap.entrySet()){
 			that.dotMap.put(entry.getKey(), entry.getValue().copy());
 		}
@@ -99,7 +92,7 @@ public class DotMap<K> implements DotStore {
 	}
 
 	@Override
-	public DotStore createEmpty() {
+	public DotMap<K> createEmpty() {
 		return new DotMap<>();
 	}
 

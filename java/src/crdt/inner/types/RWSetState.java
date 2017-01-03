@@ -11,10 +11,6 @@ public class RWSetState<V> extends DotMap<V> implements CrdtState {
 	public RWSetState(){
 		super();
 	}
-	
-	public RWSetState(RWSetState<V> that){
-		super(that);
-	}
 
 	public RWSetState(V elem, DotStore dotStore) {
 		super(elem, dotStore);
@@ -22,7 +18,12 @@ public class RWSetState<V> extends DotMap<V> implements CrdtState {
 	
 	@Override
 	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new RWSetImpl<>(nodeId, new RWSetState<>(this), cc);
+		return new RWSetImpl<>(nodeId, (RWSetState<V>)this.copy(), cc);
+	}
+	
+	@Override
+	public DotMap<V> createEmpty() {
+		return new RWSetState<>();
 	}
 
 }
