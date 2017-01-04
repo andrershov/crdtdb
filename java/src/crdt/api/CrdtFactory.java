@@ -2,24 +2,24 @@ package crdt.api;
 
 import crdt.api.types.AWMap;
 import crdt.api.types.PNCounter;
-import crdt.inner.types.AWSetImpl;
-import crdt.inner.types.DWFlagImpl;
-import crdt.inner.types.EWFlagImpl;
-import crdt.inner.types.MVRegisterImpl;
-import crdt.inner.types.RWSetImpl;
+import crdt.api.types.AWSet;
+import crdt.api.types.DWFlag;
+import crdt.api.types.EWFlag;
+import crdt.api.types.MVRegister;
+import crdt.api.types.RWSet;
 
 public interface CrdtFactory {
-	public EWFlagImpl createEWFlag();
+	public EWFlag createEWFlag();
 
-	public <V> MVRegisterImpl<V> createMVRegister();
+	public <V> MVRegister<V> createMVRegister();
 
-	public DWFlagImpl createDWFlag();
+	public DWFlag createDWFlag();
 
 	public PNCounter createPNCounter();
 
-	public <E> AWSetImpl<E> createAWSet();
+	public <E> AWSet<E> createAWSet();
 	
-	public <E> RWSetImpl<E> createRWSet();
+	public <E> RWSet<E> createRWSet();
 
 	public <K> AWMap<K> createAWMap(); 
 }

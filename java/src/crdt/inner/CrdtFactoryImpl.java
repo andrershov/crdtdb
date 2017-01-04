@@ -1,11 +1,13 @@
 package crdt.inner;
 
-import java.util.Set;
-
 import crdt.api.CrdtFactory;
 import crdt.api.types.AWMap;
 import crdt.api.types.AWSet;
+import crdt.api.types.DWFlag;
+import crdt.api.types.EWFlag;
+import crdt.api.types.MVRegister;
 import crdt.api.types.PNCounter;
+import crdt.api.types.RWSet;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.types.AWMapImpl;
 import crdt.inner.types.AWSetImpl;
@@ -24,15 +26,15 @@ public class CrdtFactoryImpl implements CrdtFactory {
 		this.cc = cc;
 	}
 	
-	public EWFlagImpl createEWFlag(){
+	public EWFlag createEWFlag(){
 		return new EWFlagImpl(nodeId, cc);
 	}
 
-	public <V> MVRegisterImpl<V> createMVRegister() {
+	public <V> MVRegister<V> createMVRegister() {
 		return new MVRegisterImpl<V>(nodeId, cc);
 	}
 
-	public DWFlagImpl createDWFlag() {
+	public DWFlag createDWFlag() {
 		return new DWFlagImpl(nodeId, cc);
 	}
 
@@ -42,12 +44,12 @@ public class CrdtFactoryImpl implements CrdtFactory {
 	}
 
 	@Override
-	public <E> AWSetImpl<E> createAWSet() {
+	public <E> AWSet<E> createAWSet() {
 		return new AWSetImpl<>(nodeId, cc);
 	}
 
 	@Override
-	public <E> RWSetImpl<E> createRWSet() {
+	public <E> RWSet<E> createRWSet() {
 		return new RWSetImpl<>(nodeId, cc);
 	}
 

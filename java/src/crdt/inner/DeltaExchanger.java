@@ -10,10 +10,7 @@ import crdt.inner.conn.NodeConnection;
 public class DeltaExchanger {
 	private DeltaStorage storage;
 	private List<? extends NodeConnection> nodes;
-	
 	private CrdtDbImpl db;
-	
-	
 	private Map<String, Map<String, Integer>> globalAckMap = new HashMap<>();
 	
 	public DeltaExchanger(CrdtDbImpl db, DeltaStorage storage, List<? extends NodeConnection> nodes) {
