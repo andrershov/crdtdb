@@ -8,6 +8,7 @@ import java.util.Set;
 import crdt.api.Crdt;
 import crdt.api.types.AWMap;
 import crdt.inner.CrdtState;
+import crdt.inner.causal.Causal;
 import crdt.inner.causal.CausalContext;
 import crdt.inner.causal.Dot;
 import crdt.inner.causal.DotStore;
@@ -47,26 +48,28 @@ public class AWMapImpl<K> extends CrdtBase<AWMapState<K>> implements AWMap<K> {
 	}
 
 	@Override
-	public AWMapState<K> getDelta() {
-		AWMapState<K> modifyDeltas = new AWMapState<>();
+	public Causal getDelta() {
+		AWMapState<K> modifyStateDeltas = new AWMapState<>();
 		CausalContext modifyCCdeltas = new CausalContext();
+		
+		
 		for (K key : crdtsToScan.keySet()) {
 			Crdt crdt = crdtsToScan.get(key);
-			CrdtState delta =  crdt.getDelta();
+			Causal delta =  crdt.getDelta();
 			if (delta != null) {
-				modifyDeltas.put(key, delta);
-				modifyCCdeltas.join(crdt.getCausalContextDelta());
+				modifyStateDeltas.put(key, delta.getState());
+				modifyCCdeltas.join(delta.getCc());
 			}
 		}
-		if (stateDelta == null){
-			stateDelta = modifyDeltas;
-			ccDelta = modifyCCdeltas;
+		
+		Causal modifyDeltas = new Causal(modifyCCdeltas, modifyStateDeltas);
+		if (delta == null){
+			delta = modifyDeltas;
 		} else {
-			stateDelta.join(modifyDeltas, ccDelta, modifyCCdeltas);
-			ccDelta.join(modifyCCdeltas);
+			delta.join(modifyDeltas);
 		}
 		
-		return stateDelta;
+		return delta;
 	}
 	
 
@@ -80,7 +83,7 @@ public class AWMapImpl<K> extends CrdtBase<AWMapState<K>> implements AWMap<K> {
 		}
 		Crdt crdt;
 		if ((crdt = crdtsToScan.get(key)) != null){
-			dotSet.addAll(crdt.getState().dots());
+			dotSet.addAll(crdt.getCausal().getState().dots());
 		}
 
 		CausalContext currentCCDelta = new CausalContext(dotSet);

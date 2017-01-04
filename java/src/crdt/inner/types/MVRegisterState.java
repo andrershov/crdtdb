@@ -19,7 +19,7 @@ public class MVRegisterState<V> extends DotFun<V> implements CrdtState {
 	
 	@Override
 	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new MVRegisterImpl<>(nodeId, (MVRegisterState<V>)this.copy(), cc);
+		return new MVRegisterImpl<>(nodeId, this, cc);
 	}
 	
 	@Override

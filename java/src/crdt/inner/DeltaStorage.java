@@ -7,25 +7,27 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import crdt.inner.causal.Causal;
+
 public class DeltaStorage {
 	
 	private Map<String, Storage> storages = new ConcurrentHashMap<>();
 	
 	private static class Storage {
-		private List<ModelState> storage = new ArrayList<>();
+		private List<Causal> storage = new ArrayList<>();
 		private int newestDeltaCounter = 0;
 		private int oldestDeltaCounter = 0;
 
 		
-		public void store(ModelState delta) {
+		public void store(Causal delta) {
 			newestDeltaCounter++;
 			storage.add(delta);
 		}
 
-		public ModelState getDeltaInterval(int startIndex) {
-			ModelState deltaInterval = null;
+		public Causal getDeltaInterval(int startIndex) {
+			Causal deltaInterval = null;
 			for (int i = startIndex; i < newestDeltaCounter; i++) {
-				ModelState delta = storage.get(i);
+				Causal delta = storage.get(i);
 				if (deltaInterval == null) {
 					deltaInterval = delta;
 				} else {
@@ -45,8 +47,8 @@ public class DeltaStorage {
 	}
 
 	
-	public void store(ModelState delta) {
-		storages.compute(delta.getKey(), (k,v) -> {
+	public void store(String key, Causal delta) {
+		storages.compute(key, (k,v) -> {
 			if (v == null) {
 				v = new Storage();
 			} 
@@ -55,7 +57,7 @@ public class DeltaStorage {
 		});
 	}
 
-	public ModelState getDeltaInterval(String key, int startIndex) {
+	public Causal getDeltaInterval(String key, int startIndex) {
 		return storages.get(key).getDeltaInterval(startIndex);
 	}
 

@@ -20,7 +20,7 @@ public class EWFlagState extends DotSet implements CrdtState {
 
 	@Override
 	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new EWFlagImpl(nodeId, (EWFlagState)this.copy(), cc);
+		return new EWFlagImpl(nodeId, this, cc);
 	}
 	
 	@Override

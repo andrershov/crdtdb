@@ -18,7 +18,7 @@ public class RWSetState<V> extends DotMap<V> implements CrdtState {
 	
 	@Override
 	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new RWSetImpl<>(nodeId, (RWSetState<V>)this.copy(), cc);
+		return new RWSetImpl<>(nodeId, this, cc);
 	}
 	
 	@Override

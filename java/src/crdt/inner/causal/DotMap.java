@@ -36,7 +36,7 @@ public class DotMap<K> implements DotStore {
 	@Override
 	public boolean join(DotStore that, CausalContext thisContext, CausalContext thatContext) {
 		if (!that.getClass().equals(this.getClass())) {
-			throw new RuntimeException("Invalid type");
+			throw new RuntimeException(String.format("Invalid type. This class %s, that class %s", this.getClass(), that.getClass()));
 		}
 		DotMap<K> thatDotMap = (DotMap<K>) that;
 

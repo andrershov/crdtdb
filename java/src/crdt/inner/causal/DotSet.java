@@ -35,7 +35,7 @@ public class DotSet implements DotStore {
 	
 	public boolean join(DotStore thatStore, CausalContext thisContext, CausalContext thatContext){
 		if (!thatStore.getClass().equals(this.getClass())) {
-			throw new RuntimeException("Invalid type");
+			throw new RuntimeException(String.format("Invalid type. This class %s, that class %s", this.getClass(), thatStore.getClass()));
 		}
 		DotSet that = (DotSet)thatStore;
 		Set<Dot> newDotset = this.intersect(that);

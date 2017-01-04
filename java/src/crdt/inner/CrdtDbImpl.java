@@ -7,11 +7,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import crdt.api.CrdtDb;
 import crdt.api.Model;
+import crdt.inner.causal.Causal;
 import crdt.inner.conn.NodeConnection;
 
 public class CrdtDbImpl implements CrdtDb {
 	
-	private ConcurrentHashMap<String, ModelState> map = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<String, Causal> map = new ConcurrentHashMap<>();
 	private DeltaStorage deltaStorage = new DeltaStorage();
 	private DeltaExchanger deltaExchanger;
 	
@@ -26,27 +27,26 @@ public class CrdtDbImpl implements CrdtDb {
 		this(Collections.singletonList(node));
 	}
 	
-	public ModelState loadFullState(String key){
+	public Causal loadFullState(String key){
 		return map.get(key);
 	}
 	
 
 	public ModelImpl load(String nodeId, String key) {
-		ModelState state = map.get(key);
-		if (state == null) {
+		Causal causal = map.get(key);
+		if (causal == null) {
 			return new ModelImpl(nodeId, key);
 		}
-		return new ModelImpl(nodeId, state);
+		return new ModelImpl(nodeId, key, new Causal(causal));
 	}
 	
 	public void store(Model model) {
-		ModelState delta = ((ModelImpl)model).getDelta();
-		storeDelta(delta);
+		storeDelta(model.getKey(), model.getDelta());
 	}
 
-	public void storeDelta(ModelState delta) {
+	public void storeDelta(String key, Causal delta) {
 		AtomicBoolean storeDelta = new AtomicBoolean(true);
-		map.compute(delta.getKey(), (ig, oldModel) -> {
+		map.compute(key, (ig, oldModel) -> {
 			if (oldModel == null) {
 				return delta;
 			} 
@@ -54,8 +54,8 @@ public class CrdtDbImpl implements CrdtDb {
 			return oldModel;
 		});
 		if (storeDelta.get()){
-			deltaStorage.store(delta);
-			deltaExchanger.shipState(delta.getKey());
+			deltaStorage.store(key, delta);
+			deltaExchanger.shipState(key);
 		}
 	}
 

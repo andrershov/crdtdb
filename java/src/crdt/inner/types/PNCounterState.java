@@ -19,7 +19,7 @@ public class PNCounterState extends DotFun<Pair> implements CrdtState {
 
 	@Override
 	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new PNCounterImpl(nodeId, (PNCounterState)this.copy(), cc);
+		return new PNCounterImpl(nodeId, this, cc);
 	}
 	
 	@Override

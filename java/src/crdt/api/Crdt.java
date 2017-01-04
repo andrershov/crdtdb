@@ -1,16 +1,14 @@
 package crdt.api;
 
 import crdt.inner.CrdtState;
+import crdt.inner.causal.Causal;
 import crdt.inner.causal.CausalContext;
 
 public interface Crdt {
 	public String innerToString();
 
-	public CrdtState getState();
-	public CausalContext getCausalContext();
+	public Causal getCausal();
 	
-	public CrdtState getDelta();
-	public CausalContext getCausalContextDelta();
-
+	public Causal getDelta();
 	
 }

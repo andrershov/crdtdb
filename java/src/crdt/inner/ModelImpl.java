@@ -5,20 +5,21 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import crdt.api.Crdt;
 import crdt.api.CrdtFactory;
 import crdt.api.Model;
+import crdt.inner.causal.Causal;
 import crdt.inner.causal.CausalContext;
 
 public class ModelImpl implements Model {
-	private Crdt root;
-	private CausalContext cc;
 	private String key;
 	private String nodeId;
+	private CausalContext cc;
+	private Crdt root;
 	
 	
-	public ModelImpl(String nodeId, ModelState state){
-		this.key = state.getKey();
+	public ModelImpl(String nodeId, String key, Causal causal){
+		this.key = key;
 		this.nodeId = nodeId;
-		this.cc = new CausalContext(state.getCc());
-		this.root = state.getCrdtState().createCrdt(nodeId, cc);
+		this.cc = causal.getCc();
+		this.root = causal.createCrdt(nodeId);
 	}
 	
 	public ModelImpl(String nodeId, String key){
@@ -27,9 +28,12 @@ public class ModelImpl implements Model {
 		this.nodeId = nodeId;
 	}
 	
+	public String getKey(){
+		return key;
+	}
 
-	public ModelState getDelta(){
-		return new ModelState(key, root.getDelta(), root.getCausalContextDelta());
+	public Causal getDelta(){
+		return root.getDelta();
 	}
 
 	@JsonIgnore

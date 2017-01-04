@@ -1,7 +1,5 @@
 package crdt.api;
 
-import java.util.Set;
-
 import crdt.api.types.AWMap;
 import crdt.api.types.PNCounter;
 import crdt.inner.types.AWSetImpl;

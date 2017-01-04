@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import crdt.inner.causal.Causal;
 import crdt.inner.conn.NodeConnection;
 
 public class DeltaExchanger {
@@ -34,19 +35,19 @@ public class DeltaExchanger {
 		
 		Integer newestAckCounter = ackMap.get(node.getName());
 		if (newestAckCounter == null || storage.getOldestDeltaCounter(key) > newestAckCounter){
-			ModelState state = db.loadFullState(key);
-			node.send(state, newestDeltaCounter);
+			Causal causal = db.loadFullState(key);
+			node.send(key, causal, newestDeltaCounter);
 		} else {
-			ModelState deltaInterval = storage.getDeltaInterval(key, newestAckCounter);
+			Causal deltaInterval = storage.getDeltaInterval(key, newestAckCounter);
 			if (deltaInterval != null) {
-				node.send(deltaInterval, newestDeltaCounter);
+				node.send(key, deltaInterval, newestDeltaCounter);
 			}
 		}
 	}
 	
-	public synchronized void  onReceive(NodeConnection node, ModelState deltaInterval, int counter) {
-		db.storeDelta(deltaInterval);
-		node.sendAck(deltaInterval.getKey(), counter);
+	public synchronized void  onReceive(NodeConnection node, String key, Causal deltaInterval, int counter) {
+		db.storeDelta(key, deltaInterval);
+		node.sendAck(key, counter);
 	}
 
 	public synchronized void onAck(NodeConnection nodeConnection, String key, int ackCounter) {

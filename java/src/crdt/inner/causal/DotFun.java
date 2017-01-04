@@ -68,7 +68,7 @@ public class DotFun<V> implements DotStore {
 	@SuppressWarnings("unchecked")
 	public boolean join(DotStore thatDotStore, CausalContext thisContext, CausalContext thatContext){
 		if (!thatDotStore.getClass().equals(this.getClass())) {
-			throw new RuntimeException("Invalid type");
+			throw new RuntimeException(String.format("Invalid type. This class %s, that class %s", this.getClass(), thatDotStore.getClass()));
 		}
 		DotFun<V> that = (DotFun<V>)thatDotStore;
 		Map<Dot, V> newDotFun = this.intersect(that);

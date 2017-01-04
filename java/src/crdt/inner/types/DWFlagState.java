@@ -19,7 +19,7 @@ public class DWFlagState extends DotSet implements CrdtState {
 	
 	@Override
 	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new DWFlagImpl(nodeId, (DWFlagState)this.copy(), cc);
+		return new DWFlagImpl(nodeId, this, cc);
 	}
 	
 	@Override

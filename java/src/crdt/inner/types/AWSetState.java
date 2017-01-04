@@ -18,7 +18,7 @@ public class AWSetState<V> extends DotMap<V> implements CrdtState {
 	
 	@Override
 	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new AWSetImpl<>(nodeId, (AWSetState<V>)this.copy(), cc);
+		return new AWSetImpl<>(nodeId, this, cc);
 	}
 	
 	@Override

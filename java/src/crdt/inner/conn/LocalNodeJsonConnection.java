@@ -2,7 +2,7 @@ package crdt.inner.conn;
 
 import crdt.inner.DeltaExchanger;
 import crdt.inner.ModelImpl;
-import crdt.inner.ModelState;
+import crdt.inner.causal.Causal;
 import crdt.inner.messages.AckMessage;
 import crdt.inner.messages.CrdtMessage;
 import crdt.inner.messages.DeltaMessage;
@@ -36,9 +36,9 @@ public class LocalNodeJsonConnection implements NodeConnection {
 	 * @see crdt.inner.conn.NodeConnection#send(crdt.inner.ModelImpl, int)
 	 */
 	@Override
-	public void send(ModelState deltaInterval, int counter) {
+	public void send(String key, Causal deltaInterval, int counter) {
 		if (broken) return;
-		String msg = serializer.serialize(new DeltaMessage(deltaInterval, counter));
+		String msg = serializer.serialize(new DeltaMessage(key, deltaInterval, counter));
 		System.out.println("Sending delta "+nodeId+" msg: "+msg);
 		remoteConnection.receive(msg);
 	}
@@ -60,7 +60,7 @@ public class LocalNodeJsonConnection implements NodeConnection {
 		} else if (crdtMsg instanceof DeltaMessage){
 			DeltaMessage deltaMsg = (DeltaMessage) crdtMsg;
 			System.out.println("Received delta msg from node "+nodeId+" msg: "+msg);
-			deltaExchanger.onReceive(this, deltaMsg.deltaInterval, deltaMsg.counter);
+			deltaExchanger.onReceive(this, deltaMsg.key, deltaMsg.deltaInterval, deltaMsg.counter);
 		}
 	}
 	

@@ -13,7 +13,7 @@ public class AWMapState<K> extends DotMap<K> implements CrdtState {
 	
 	@Override
 	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new AWMapImpl<>(nodeId, (AWMapState<K>)this.copy(), cc);
+		return new AWMapImpl<>(nodeId, this, cc);
 	}
 
 	@Override

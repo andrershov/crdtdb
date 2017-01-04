@@ -46,9 +46,9 @@ public class PNCounterImpl extends CrdtBase<PNCounterState> implements PNCounter
 
 	@Override
 	public void reset() {
-		stateDelta = new PNCounterState();
-		ccDelta = new CausalContext(cc);
-		
+		PNCounterState currentStateDelta = new PNCounterState();
+		CausalContext currentCCDelta = new CausalContext(cc);
+		joinDelta(currentStateDelta, currentCCDelta);
 	}
 
 	@Override
