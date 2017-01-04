@@ -54,7 +54,7 @@ public class PNCounterImpl extends CrdtBase<PNCounterState> implements PNCounter
 	@Override
 	public int value() {
 		int sum = 0;
-		for (Pair p: state.dotFun.values()){
+		for (Pair p: state.values()){
 			sum=sum+p.inc-p.dec;
 		}
 		return sum;

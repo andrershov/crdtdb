@@ -10,28 +10,10 @@ public class Causal {
 	private CausalContext cc;
 	private CrdtState state;
 	
-	@JsonCreator
-	public Causal(@JsonProperty("cc") CausalContext cc, @JsonProperty("state") CrdtState state){
-		this.cc = cc;
-		this.state = state;
-	}
-	
 
 	public Causal(Causal that){
 		this.cc = new CausalContext(that.cc);
 		this.state = (CrdtState) that.state.copy();
-	}
-
-
-	@JsonProperty("cc")
-	public CausalContext getCc() {
-		return cc;
-	}
-
-
-	@JsonProperty("state")
-	public CrdtState getState() {
-		return state;
 	}
 
 
@@ -47,4 +29,24 @@ public class Causal {
 	public Crdt createCrdt(String nodeId) {
 		return state.createCrdt(nodeId, cc);
 	}
+	
+	//jackson section
+	@JsonCreator
+	public Causal(@JsonProperty("cc") CausalContext cc, @JsonProperty("state") CrdtState state){
+		this.cc = cc;
+		this.state = state;
+	}
+	
+	@JsonProperty("cc")
+	public CausalContext getCc() {
+		return cc;
+	}
+
+
+	@JsonProperty("state")
+	public CrdtState getState() {
+		return state;
+	}
+	
+	
 }

@@ -21,7 +21,7 @@ import crdt.inner.types.RWSetState;
 	@Type(value = DotFun.class, name = "DotFun"),
 	@Type(value = DotMap.class, name = "DotMap"),
 	
-	//TODO: any chance to leave it only in CrdtState?
+	//Types below are subclasses of CrdtState sub-interface, but we need to declare them here for AW/RWMap to work properly.
 	@Type(value = MVRegisterState.class, name = "MVRegister"), 
 	@Type(value = EWFlagState.class, name = "EWFlag"),
 	@Type(value = DWFlagState.class, name = "DWFlag"),

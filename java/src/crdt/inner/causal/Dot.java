@@ -4,15 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Dot {
-	@JsonCreator
-	public Dot(@JsonProperty("nodeId") String nodeId, @JsonProperty("counter") int counter) {
-		this.nodeId = nodeId;
-		this.counter = counter;
-	}
-	@JsonProperty
-	public final String nodeId;
-	@JsonProperty
-	public final int counter;
+	private final String nodeId;
+	private final int counter;
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -21,6 +15,7 @@ public class Dot {
 		result = prime * result + ((nodeId == null) ? 0 : nodeId.hashCode());
 		return result;
 	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -44,6 +39,20 @@ public class Dot {
 		return nodeId+","+counter;
 	}
 	
-	
-	
+	//jackson section
+	@JsonCreator
+	public Dot(@JsonProperty("nodeId") String nodeId, @JsonProperty("counter") int counter) {
+		this.nodeId = nodeId;
+		this.counter = counter;
+	}
+
+	@JsonProperty("nodeId")
+	public String getNodeId() {
+		return nodeId;
+	}
+
+	@JsonProperty("counter")
+	public int getCounter() {
+		return counter;
+	}
 }

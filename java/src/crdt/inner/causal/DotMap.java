@@ -14,9 +14,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import crdt.inner.serializers.PrimitiveKeyDeserializer;
 
 public class DotMap<K> implements DotStore {
-	@JsonProperty("dotMap")
-	@JsonDeserialize(keyUsing = PrimitiveKeyDeserializer.class)
-	public Map<K, DotStore> dotMap; //unfortunately custom key deserializer does not work in conjunction with @JsonCreator
+	private Map<K, DotStore> dotMap; 
 
 	public DotMap(K key, DotStore dotStore) {
 		this();
@@ -26,17 +24,17 @@ public class DotMap<K> implements DotStore {
 	public DotMap() {
 		dotMap = new HashMap<>();
 	}
-	
+
 	public void put(K key, DotStore dotStore) {
 		dotMap.put(key, dotStore);
 	}
-	
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean join(DotStore that, CausalContext thisContext, CausalContext thatContext) {
 		if (!that.getClass().equals(this.getClass())) {
-			throw new RuntimeException(String.format("Invalid type. This class %s, that class %s", this.getClass(), that.getClass()));
+			throw new RuntimeException(
+					String.format("Invalid type. This class %s, that class %s", this.getClass(), that.getClass()));
 		}
 		DotMap<K> thatDotMap = (DotMap<K>) that;
 
@@ -50,13 +48,13 @@ public class DotMap<K> implements DotStore {
 		for (K key : keySet) {
 			DotStore thisVal = this.dotMap.get(key);
 			DotStore thatVal = thatDotMap.dotMap.get(key);
-			if (thisVal == null){
+			if (thisVal == null) {
 				thisVal = thatVal.createEmpty();
 			}
-			if (thatVal == null){
+			if (thatVal == null) {
 				thatVal = thisVal.createEmpty();
 			}
-			if (!thisVal.isEmpty() || !thatVal.isEmpty()){
+			if (!thisVal.isEmpty() || !thatVal.isEmpty()) {
 				changed |= thisVal.join(thatVal, thisContext, thatContext);
 				if (!thisVal.isEmpty()) {
 					newDotMap.put(key, thisVal);
@@ -67,20 +65,15 @@ public class DotMap<K> implements DotStore {
 		return changed;
 	}
 
-	@Override
-	@JsonIgnore
-	public boolean isEmpty() {
-		return dotMap.isEmpty();
-	}
 
 	public Stream<Entry<K, DotStore>> nonEmptyEntries() {
 		return dotMap.entrySet().stream().filter(entry -> !entry.getValue().isEmpty());
 	}
-	
+
 	@Override
 	public DotMap<K> copy() {
 		DotMap<K> that = createEmpty();
-		for (Entry<K, DotStore> entry :this.dotMap.entrySet()){
+		for (Entry<K, DotStore> entry : this.dotMap.entrySet()) {
 			that.dotMap.put(entry.getKey(), entry.getValue().copy());
 		}
 		return that;
@@ -99,7 +92,7 @@ public class DotMap<K> implements DotStore {
 	@Override
 	public Set<Dot> dots() {
 		Set<Dot> dots = new HashSet<>();
-		for (DotStore dotStore : dotMap.values()){
+		for (DotStore dotStore : dotMap.values()) {
 			dots.addAll(dotStore.dots());
 		}
 		return dots;
@@ -113,6 +106,24 @@ public class DotMap<K> implements DotStore {
 		return res;
 	}
 
+	// jackson section
+	// Key deserializer does not work in conjuction with @JsonCreate, that's why
+	// default constructor and setter are used
+	@JsonProperty("dotMap")
+	@JsonDeserialize(keyUsing = PrimitiveKeyDeserializer.class)
+	public void setDotMap(Map<K, DotStore> dotMap) {
+		this.dotMap = dotMap;
+	}
+
+	@JsonProperty("dotMap")
+	public Map<K, DotStore> getDotMap() {
+		return dotMap;
+	}
 	
+	@Override
+	@JsonIgnore
+	public boolean isEmpty() {
+		return dotMap.isEmpty();
+	}
 	
 }

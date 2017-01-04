@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -12,9 +13,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import crdt.inner.serializers.DotDeserializer;
 
 public class DotFun<V> implements DotStore {
-	@JsonProperty
-	@JsonDeserialize(keyUsing = DotDeserializer.class)
-	public Map<Dot, V> dotFun; //unfortunately custom key deserializer does not work in conjunction with @JsonCreator
+	private Map<Dot, V> dotFun;
 	
 	
 	protected DotFun(){
@@ -90,11 +89,6 @@ public class DotFun<V> implements DotStore {
 		return dotFun.values();
 	}
 
-	@JsonIgnore
-	public boolean isEmpty() {
-		return dotFun.isEmpty();
-	}
-
 	@Override
 	public String toString() {
 		return this.getClass().getSimpleName() + " [dotFun=" + dotFun + "]";
@@ -112,5 +106,23 @@ public class DotFun<V> implements DotStore {
 	@Override
 	public Set<Dot> dots() {
 		return new HashSet<>(dotFun.keySet());
+	}
+	
+	//jackson section
+	//Key deserializer does not work in conjuction with @JsonCreate, that's why default constructor and setter are used
+	@JsonProperty("dotFun")
+	@JsonDeserialize(keyUsing = DotDeserializer.class)
+	public void setDotFun(Map<Dot, V> dotFun) {
+		this.dotFun = dotFun;
+	}
+	
+	@JsonProperty("dotFun")
+	public Map<Dot, V> getDotFun() {
+		return dotFun;
+	}
+	
+	@JsonIgnore
+	public boolean isEmpty() {
+		return dotFun.isEmpty();
 	}
 }

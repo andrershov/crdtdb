@@ -6,12 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import crdt.inner.causal.Causal;
 
 public class DeltaMessage implements CrdtMessage {
-	@JsonProperty("counter")
-	public int counter;
-	@JsonProperty("key")
-	public String key;
-	@JsonProperty("deltaInterval")
-	public Causal deltaInterval;
+	private int counter;
+	private String key;
+	private Causal deltaInterval;
 
 	@JsonCreator
 	public DeltaMessage(@JsonProperty("key") String key, @JsonProperty("deltaInterval") Causal deltaInterval, @JsonProperty("counter") int counter) {
@@ -19,5 +16,22 @@ public class DeltaMessage implements CrdtMessage {
 		this.deltaInterval = deltaInterval;
 		this.counter = counter;
 	}
+
+	@JsonProperty("counter")
+	public int getCounter() {
+		return counter;
+	}
+
+	@JsonProperty("key")
+	public String getKey() {
+		return key;
+	}
+
+	@JsonProperty("deltaInterval")
+	public Causal getDeltaInterval() {
+		return deltaInterval;
+	}
+	
+	
 
 }

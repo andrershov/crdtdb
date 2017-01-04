@@ -1,7 +1,6 @@
 package crdt.inner.conn;
 
 import crdt.inner.DeltaExchanger;
-import crdt.inner.ModelImpl;
 import crdt.inner.causal.Causal;
 import crdt.inner.messages.AckMessage;
 import crdt.inner.messages.CrdtMessage;
@@ -56,11 +55,11 @@ public class LocalNodeJsonConnection implements NodeConnection {
 		if (crdtMsg instanceof AckMessage){
 			AckMessage ackMsg = (AckMessage) crdtMsg;
 			System.out.println("Received ack msg from node "+nodeId+" msg: "+msg);
-			deltaExchanger.onAck(this, ackMsg.key, ackMsg.counter);
+			deltaExchanger.onAck(this, ackMsg.getKey(), ackMsg.getCounter());
 		} else if (crdtMsg instanceof DeltaMessage){
 			DeltaMessage deltaMsg = (DeltaMessage) crdtMsg;
 			System.out.println("Received delta msg from node "+nodeId+" msg: "+msg);
-			deltaExchanger.onReceive(this, deltaMsg.key, deltaMsg.deltaInterval, deltaMsg.counter);
+			deltaExchanger.onReceive(this, deltaMsg.getKey(), deltaMsg.getDeltaInterval(), deltaMsg.getCounter());
 		}
 	}
 	

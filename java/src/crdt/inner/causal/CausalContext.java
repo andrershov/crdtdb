@@ -13,10 +13,6 @@ public class CausalContext {
 		this.dotSet = new HashSet<>();
 	}
 	
-	@JsonCreator
-	public CausalContext(@JsonProperty("dotSet") Set<Dot> dots) {
-		this.dotSet = dots;
-	}
 	
 	public CausalContext(Set<Dot> dots, Dot newDot){
 		this.dotSet = dots;
@@ -35,17 +31,11 @@ public class CausalContext {
 	public Dot next(String nodeId) {
 		Optional<Dot> maxDot = max(nodeId);
 		if (maxDot.isPresent()){
-			return new Dot(nodeId, maxDot.get().counter+1);
+			return new Dot(nodeId, maxDot.get().getCounter()+1);
 		} else {
 			return new Dot(nodeId, 1);
 		}
 	}
-	
-	@JsonProperty("dotSet")
-	public Set<Dot> getDotSet() {
-		return dotSet;
-	}
-	
 	
 
 	public void join(CausalContext that) {
@@ -59,7 +49,18 @@ public class CausalContext {
 	}
 
 	public Optional<Dot> max(String nodeId) {
-		return dotSet.stream().filter(dot -> dot.nodeId.equals(nodeId)).reduce((acc, dot) -> dot.counter > acc.counter ? dot : acc);
+		return dotSet.stream().filter(dot -> dot.getNodeId().equals(nodeId)).reduce((acc, dot) -> dot.getCounter() > acc.getCounter() ? dot : acc);
+	}
+	
+	//jackson section
+	@JsonCreator
+	public CausalContext(@JsonProperty("dotSet") Set<Dot> dots) {
+		this.dotSet = dots;
+	}
+	
+	@JsonProperty("dotSet")
+	public Set<Dot> getDotSet() {
+		return dotSet;
 	}
 	
 	

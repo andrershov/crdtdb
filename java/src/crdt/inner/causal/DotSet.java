@@ -3,12 +3,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DotSet implements DotStore {
-	@JsonProperty("dotSet")
-	public Set<Dot> dotSet;
+	private Set<Dot> dotSet;
 	
 	public DotSet(){
 		dotSet = new HashSet<>();
@@ -55,11 +55,6 @@ public class DotSet implements DotStore {
 	}
 		
 
-	@JsonIgnore
-	public boolean isEmpty() {
-		return dotSet.isEmpty();
-	}
-
 	@Override
 	public String toString() {
 		return this.getClass().getSimpleName() +" [dotSet=" + dotSet + "]";
@@ -100,5 +95,21 @@ public class DotSet implements DotStore {
 	@Override
 	public Set<Dot> dots() {
 		return new HashSet<>(dotSet);
+	}
+	
+	//jackson section
+	@JsonProperty("dotSet")
+	public Set<Dot> getDotSet() {
+		return dotSet;
+	}
+	
+	@JsonCreator
+	public DotSet(@JsonProperty("dotSet") Set<Dot> dotSet){
+		this.dotSet = dotSet;
+	}
+	
+	@JsonIgnore
+	public boolean isEmpty() {
+		return dotSet.isEmpty();
 	}
 }
