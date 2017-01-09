@@ -8,23 +8,23 @@ import crdt.inner.causal.DotSet;
 
 public class DWFlagState extends DotSet implements CrdtState {
 
-	public DWFlagState(Dot dot) {
-		super(dot);
-	}
+    public DWFlagState(Dot dot) {
+        super(dot);
+    }
 
-	public DWFlagState() {
-		super();
-	}
+    public DWFlagState() {
+        super();
+    }
 
-	
-	@Override
-	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new DWFlagImpl(nodeId, this, cc);
-	}
-	
-	@Override
-	public DotSet createEmpty() {
-		return new DWFlagState();
-	}
+
+    @Override
+    public Crdt createCrdt(String nodeId, CausalContext cc) {
+        return new DWFlagImpl(nodeId, this, cc);
+    }
+
+    @Override
+    public DotSet createEmpty() {
+        return new DWFlagState();
+    }
 
 }

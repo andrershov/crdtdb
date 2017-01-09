@@ -5,18 +5,17 @@ import crdt.inner.causal.Causal;
 
 public interface NodeConnection {
 
-	String getName();
+    String getName();
 
-	void send(String key, Causal deltaInterval, int counter);
+    void send(String key, Causal deltaInterval, int counter);
 
-	void setDeltaExchanger(DeltaExchanger deltaExchanger);
+    void setDeltaExchanger(DeltaExchanger deltaExchanger);
 
-	void breakConn();
+    void breakConn();
 
-	void fixConn();
+    void fixConn();
 
-	void sendAck(String key, int counter);
+    void sendAck(String key, int counter);
 
-	
 
 }

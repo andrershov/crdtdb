@@ -8,24 +8,23 @@ import crdt.inner.causal.DotSet;
 
 public class EWFlagState extends DotSet implements CrdtState {
 
-	public EWFlagState(Dot dot) {
-		super(dot);
-	}
+    public EWFlagState(Dot dot) {
+        super(dot);
+    }
 
-	public EWFlagState() {
-		super();
-	}
+    public EWFlagState() {
+        super();
+    }
 
 
+    @Override
+    public Crdt createCrdt(String nodeId, CausalContext cc) {
+        return new EWFlagImpl(nodeId, this, cc);
+    }
 
-	@Override
-	public Crdt createCrdt(String nodeId, CausalContext cc) {
-		return new EWFlagImpl(nodeId, this, cc);
-	}
-	
-	@Override
-	public DotSet createEmpty() {
-		return new EWFlagState();
-	}
+    @Override
+    public DotSet createEmpty() {
+        return new EWFlagState();
+    }
 
 }

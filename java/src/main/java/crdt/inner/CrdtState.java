@@ -5,5 +5,5 @@ import crdt.inner.causal.CausalContext;
 import crdt.inner.causal.DotStore;
 
 public interface CrdtState extends DotStore {
-	Crdt createCrdt(String nodeId, CausalContext cc);
+    Crdt createCrdt(String nodeId, CausalContext cc);
 }
